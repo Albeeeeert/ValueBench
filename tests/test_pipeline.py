@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import Mock, patch
 
+import yaml
 from PIL import Image
 
 from value_eval.cli import build_parser
@@ -21,7 +22,7 @@ from value_eval.generation.runner import BenchmarkGenerator
 from value_eval.image_generation.client import QwenImageConfig
 from value_eval.image_generation.runner import ImageGenerator, discover_tasks
 from value_eval.io_utils import iter_jsonl, load_json
-from value_eval.pipeline import Pipeline
+from value_eval.pipeline import Pipeline, inspect_pipeline
 from value_eval.response_collection.runner import ResponseCollector, ResponseSample, target_prompt
 from value_eval.schemas import ApiResponse
 
@@ -205,6 +206,7 @@ class ValueEvalPipelineTest(unittest.TestCase):
         self.output_root = Path(self.temporary.name) / "outputs"
         self.config = replace(
             self.base,
+            image_backend="api",
             output_root=self.output_root,
             run_id="offline_test",
             max_items_per_profile=4,
@@ -512,10 +514,67 @@ class ValueEvalPipelineTest(unittest.TestCase):
         with (
             patch.object(pipeline, "run_benchmark", return_value={"ok": True}),
             patch.object(pipeline, "run_images", return_value={"ok": True}) as images,
-            patch.object(pipeline, "run_responses", return_value={"ok": True}),
+            patch.object(pipeline, "run_responses", return_value={"ok": True}) as responses,
         ):
             pipeline.run_all(force=True)
         images.assert_called_once_with(force=False)
+        responses.assert_called_once_with(force=True)
+
+    def test_run_all_can_stop_after_images(self) -> None:
+        config = replace(self.config, response={**self.config.response, "enabled": False})
+        pipeline = Pipeline(config, logger=logging.getLogger("skip-response-test"))
+        with (
+            patch.object(pipeline, "run_benchmark", return_value={"ok": True}) as benchmark,
+            patch.object(pipeline, "run_images", return_value={"ok": True}) as images,
+            patch.object(pipeline, "run_responses") as responses,
+        ):
+            result = pipeline.run_all()
+        benchmark.assert_called_once_with(force=False)
+        images.assert_called_once_with(force=False)
+        responses.assert_not_called()
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["stages"]["responses"]["status"], "skipped")
+        self.assertEqual(load_json(config.run_root / "run_manifest.json"), result)
+        self.assertFalse((config.run_root / "responses").exists())
+
+    def test_disabled_response_skips_target_key_and_capability_preflight(self) -> None:
+        target = replace(self.config.models[self.config.target_model],
+                         api_key_env="RESPONSE_ONLY_KEY", supports_images=False)
+        config = replace(self.config, models={**self.config.models, self.config.target_model: target},
+                         response={**self.config.response, "enabled": False})
+        disabled = inspect_pipeline(config)
+        self.assertFalse(disabled["responses_enabled"])
+        self.assertTrue(disabled["model_capability_ready"])
+        self.assertNotIn("RESPONSE_ONLY_KEY", disabled["required_api_key_envs"])
+        enabled = inspect_pipeline(replace(config, response={**config.response, "enabled": True}))
+        self.assertFalse(enabled["model_capability_ready"])
+        self.assertIn("RESPONSE_ONLY_KEY", enabled["required_api_key_envs"])
+
+    def test_disabled_response_allows_config_without_target_model(self) -> None:
+        raw = yaml.safe_load(self.base.config_path.read_text())
+        raw["image_backend"] = "api"
+        raw["models"].pop(raw["response"]["target_model"])
+        raw["response"]["enabled"] = False
+        path = Path(self.temporary.name) / "without-target.yaml"
+        path.write_text(yaml.safe_dump(raw))
+        config = PipelineConfig.load(path)
+        self.assertFalse(config.responses_enabled)
+        self.assertTrue(inspect_pipeline(config)["model_capability_ready"])
+        raw["response"].pop("enabled")
+        path.write_text(yaml.safe_dump(raw))
+        with self.assertRaisesRegex(ValueError, "target model alias"):
+            PipelineConfig.load(path)
+        raw["response"]["enabled"] = "false"
+        path.write_text(yaml.safe_dump(raw))
+        with self.assertRaisesRegex(ValueError, "response.enabled"):
+            PipelineConfig.load(path)
+
+    def test_explicit_response_collection_still_runs_when_run_all_stage_disabled(self) -> None:
+        config = replace(self.config, response={**self.config.response, "enabled": False})
+        pipeline = Pipeline(config, logger=logging.getLogger("explicit-response-test"))
+        with patch("value_eval.pipeline.ResponseCollector") as collector:
+            pipeline.run_responses(max_items=1)
+        collector.return_value.run.assert_called_once_with(force=False, max_items=1)
 
 
 if __name__ == "__main__":

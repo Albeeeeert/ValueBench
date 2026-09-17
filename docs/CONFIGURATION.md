@@ -72,7 +72,83 @@ scene、15% environment context。`visual_evidence` 为 85% non-text、10% minim
 5% text-supported；`max_visible_text_words` 对应 0/8/20。沿用旧禁配规则，text artifact
 不会分配给 non-text；当前两组比例恰好都为文字类场景/证据保留 15% 容量。
 
-## image
+## image_backend、image 和 local_image
+
+顶层 `image_backend` 选择图片后端：`api` 使用 `image`，`local` 使用 `local_image`。
+两组配置可以同时保留，未选中的一组不参与推理、图片缓存指纹或生图时机判断。
+省略 `image_backend` 时默认 `api`，兼容旧配置。
+
+```yaml
+image_backend: local
+image:
+  model: qwen-image-2.0
+  api_key_env: DASHSCOPE_API_KEY
+  size: "2048*2048"
+local_image:
+  model: Qwen-Image-2512
+  model_path: /HDD0/hanzhouyu/Qwen-image-2512
+  model_revision: "2512"
+  size: "512*512"
+  num_inference_steps: 50
+  true_cfg_scale: 4.0
+  negative_prompt: "低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感。构图混乱。文字模糊，扭曲。"
+  seed: 42
+  dtype: bfloat16
+  cpu_offload: none
+  device_map: balanced
+  concurrency: 1
+  generate_during_benchmark: false
+```
+
+当前三份模板均启用 `local`，参数参考
+`/HDD0/hanzhouyu/50-single/image_dataset_generation/config.json`。
+其中 `width`/`height` 合并为 `size`，`offload` 对应 `cpu_offload`；不执行额外预热。
+固定 seed 策略与参考脚本一致：每张图重建随机数生成器并使用 seed 42。
+
+`local_image.model_path` 是完整 Diffusers 模型目录，相对 `run.root` 解析，也支持绝对路径。
+程序始终以 `local_files_only=True` 加载本地权重，不下载模型。目录应包含
+`model_index.json` 以及模型、文本编码器、VAE、tokenizer、scheduler 等组件。
+原地更换权重时同步修改 `model_revision`；此字段用于记录和缓存失效，不是下载参数。
+
+本地依赖将 PyTorch 固定为 `2.8.0`，避免无上限升级到本机驱动不兼容的 CUDA 13 构建。
+`pyproject.toml` 的版本约束不指定 pip 下载源，CUDA 构建通过安装命令明确选择。
+在项目根目录执行：
+
+```bash
+.venv/bin/python -m pip install 'torch==2.8.0' --index-url https://download.pytorch.org/whl/cu128
+.venv/bin/python -m pip install -e '.[local-image]'
+```
+
+CUDA 12.8 安装源见 [PyTorch 官方安装说明](https://pytorch.org/get-started/previous-versions/#v280)。
+修改依赖文件不会自动更新已经安装的包；上述命令也用于替换现有 `.venv` 中的错误版本。
+
+可选依赖要求 Diffusers >= 0.35，该版本加入 Qwen-Image pipeline，见
+[官方发布说明](https://github.com/huggingface/diffusers/releases/tag/v0.35.0)。
+
+本地默认 512×512、50 步、BF16、CFG 4.0；`size` 的两维必须为正的 16 倍数。
+`device_map: balanced` 由 Diffusers 在当前可见 GPU 中自动分配模型，并设 `cpu_offload: none`。
+不设置 `CUDA_VISIBLE_DEVICES` 时使用进程默认可见的 GPU；如需限定两张物理卡，设置
+`CUDA_VISIBLE_DEVICES=0,1`。不再要求恰好可见两张卡，至少需要一张可用 CUDA GPU。
+自动分配行为见 [Diffusers 设备分配说明](https://huggingface.co/docs/diffusers/main/en/tutorials/inference_with_big_models#device-placement)。
+此模式不手动分配层，也不调用整个 pipeline 的 `.to()`。
+如需单卡 CPU 卸载，设 `device_map: null`，然后选择 `cpu_offload: model` 或 `sequential`；
+这时 `device` 指定单张 CUDA 卡，默认 `cuda:0`。CPU 卸载与自动设备分配不同时启用。
+本地 `concurrency` 固定为 1，各图片任务共享模型，模型在首个待生成任务上加载，
+阶段结束后释放；全部图片可复用时不加载模型。
+
+每张图直接使用配置的 `seed`，默认 42，实际 seed 写入任务 manifest。CPU 随机数生成器
+创建噪声后由 Diffusers 送到对应设备；相同 seed 不保证跨硬件或依赖版本的逐像素一致性。
+本地 manifest 记录模型路径/版本标记、尺寸、步数、CFG、负提示词、dtype 和 seed；
+修改生成参数或切换后端会使图片缓存失效。API 历史 manifest 仍可按原规则复用。
+`device_map` 和随机数生成器设备也进入图片缓存指纹。
+`validate-input` / `--dry-run` 在本地模式下报告目录、依赖和 CUDA 就绪情况，不加载权重。
+图片阶段不要求图片 API Key，其他文本和回应阶段仍要求各自模型的密钥。
+
+已有 benchmark 可单独运行 `generate-images` 补图。benchmark checkpoint 当前包含整个
+YAML 文件哈希，修改配置后对旧 run 执行 `run-all` 可能触发指纹不匹配；新实验使用新
+`run.id`。切换图片后重新执行 `collect-responses`，图片哈希变化会使旧图片回应缓存失效。
+
+以下 `image` 字段仅用于 API 后端：
 
 配置图片模型、endpoint、图片尺寸、同步或异步模式、并发、超时和重试次数。
 `api_key_env` 只保存环境变量名。当前客户端校验返回内容确实是指定尺寸的 PNG/JPEG。
@@ -80,16 +156,21 @@ scene、15% environment context。`visual_evidence` 为 85% non-text、10% minim
 
 | 字段 | 说明 |
 | --- | --- |
-| `generate_during_benchmark` | 是否在 benchmark 每个机制 checkpoint 成功后立即提交图片任务；默认 `false`。关闭时需在 benchmark 完成后运行 `generate-images`。 |
+| `generate_during_benchmark` | 是否在 benchmark 每个机制 checkpoint 成功后立即提交图片任务；默认 `false`。`run-all` 关闭此项时也会在 benchmark 完成后自动执行图片阶段；单独运行 `generate-benchmark` 时需另行运行 `generate-images`。本地后端读取 `local_image` 中的同名字段。 |
 
 开启时图片任务使用独立线程池，不阻塞文本生成主线程；benchmark 结束会补扫完整
 `benchmark/*/benchmark.json`。`both` 模式按 `shared_image_id` 去重，awareness 和 instruction
 共享一张图片；单风格模式每个机制各自一张。图片 manifest 会记录任务状态和校验信息，人工
-图片阶段会复用状态为 `generated/reused` 且文件校验通过的任务。`--force` 才会忽略已有
-manifest 并重新请求。由于图片请求早于最终跨 shard 全局重复检查，后续校验失败时可能已经
+图片阶段会复用生成参数匹配、状态为 `generated/reused` 且文件校验通过的任务。`--force` 会忽略已有
+manifest 并重新生成。由于图片请求早于最终跨 shard 全局重复检查，后续校验失败时可能已经
 产生无法继续使用的图片 API 费用。
 
 ## response
+
+`enabled` 默认 `true`。如果只需要 benchmark 和图片，设置 `response.enabled: false`，
+一键脚本 / `run-all` 会在图片阶段完成后结束，manifest 将回答阶段标记为 `skipped`。
+此时全流程预检不要求目标回答模型及其 API Key，也不检查其图片能力。
+显式运行 `collect-responses` 仍会采集回答，需配置有效的 `target_model` 和对应密钥。
 
 `target_model` 指向 `models` 中的目标模型别名。`mode` 支持：
 

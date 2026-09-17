@@ -54,6 +54,35 @@ value-eval --help
 
 运行时始终通过 `--config` 明确选择；省略时默认使用 `prepared_scenarios.yaml`。
 
+三份配置均同时提供 `image`（API）和 `local_image`（本地 Qwen-Image）。当前模板设置
+`image_backend: local`，使用 `/HDD0/hanzhouyu/Qwen-image-2512`，512×512、50 步、固定 seed 42，
+通过 `device_map: balanced` 交给 Diffusers 在当前可见 GPU 中自动分配。
+无需指定 GPU 数量；如需限定两张卡，可设置 `CUDA_VISIBLE_DEVICES=0,1`。
+切换为 `image_backend: api` 即可使用原 API 配置；旧配置省略该字段仍默认 API。
+可使用参考项目已有环境运行：
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1 \
+PYTHON_BIN=/SSD3/hanzhouyu/anaconda3/envs/sd/bin/python \
+bash scripts/run_pipeline.sh
+```
+
+使用项目 `.venv` 时，按以下顺序安装。PyTorch 固定为 2.8.0，第一条命令选择与本机
+已验证环境一致的 CUDA 12.8 构建，第二条安装其余本地生图依赖：
+
+```bash
+.venv/bin/python -m pip install 'torch==2.8.0' --index-url https://download.pytorch.org/whl/cu128
+.venv/bin/python -m pip install -e '.[local-image]'
+```
+
+修改 `pyproject.toml` 不会自动替换现有环境中的 PyTorch，需要实际执行上述安装命令。
+一键入口 `bash scripts/run_pipeline.sh`
+和各阶段命令均读取此选项，详细字段和旧 run 迁移方式见
+[配置说明](docs/CONFIGURATION.md#image_backendimage-和-local_image)。
+
+只需要 benchmark 和图片时，将配置中的 `response.enabled` 改为 `false`，一键脚本会在
+图片生成完成后结束，跳过目标模型回答采集。该开关默认 `true`。
+
 ## 第一步：Excel 生成场景文件
 
 如果已经有 `scenario_elements/*.json` 和 manifest，可跳过本步，直接进入第二步。

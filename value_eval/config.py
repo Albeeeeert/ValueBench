@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 import re
 from dataclasses import dataclass, field
@@ -181,6 +182,82 @@ class ScenarioSourceConfig:
 
 
 @dataclass(frozen=True)
+class LocalImageConfig:
+    model_path: str
+    model: str = "Qwen/Qwen-Image"
+    model_revision: str = ""
+    size: str = "512*512"
+    num_inference_steps: int = 50
+    true_cfg_scale: float = 4.0
+    negative_prompt: str = " "
+    seed: int = 42
+    dtype: str = "bfloat16"
+    device: str = "cuda:0"
+    cpu_offload: str = "sequential"
+    device_map: str | None = None
+
+    def cuda_indices(self, visible_device_count: int) -> tuple[int, ...]:
+        if self.device_map == "balanced":
+            return tuple(range(visible_device_count))
+        return (int(self.device.partition(":")[2] or 0),)
+
+    @classmethod
+    def from_mapping(cls, raw: dict[str, Any], root: Path) -> "LocalImageConfig":
+        model_path = str(raw.get("model_path") or "").strip()
+        if not model_path:
+            raise ValueError("local_image.model_path is required when image_backend=local")
+        size = str(raw.get("size", "512*512")).lower().replace("x", "*")
+        parts = size.split("*")
+        if len(parts) != 2 or not all(part.strip().isdigit() for part in parts):
+            raise ValueError("local_image.size must look like 512*512")
+        width, height = map(int, parts)
+        if min(width, height) <= 0 or width % 16 or height % 16:
+            raise ValueError("local_image.size dimensions must be positive multiples of 16")
+        steps = int(raw.get("num_inference_steps", 50))
+        if steps < 1:
+            raise ValueError("local_image.num_inference_steps must be positive")
+        cfg_scale = float(raw.get("true_cfg_scale", 4.0))
+        if not math.isfinite(cfg_scale) or cfg_scale < 1:
+            raise ValueError("local_image.true_cfg_scale must be finite and >= 1")
+        dtype = str(raw.get("dtype", "bfloat16"))
+        if dtype not in {"bfloat16", "float16", "float32"}:
+            raise ValueError("local_image.dtype must be bfloat16, float16, or float32")
+        device = str(raw.get("device", "cuda:0"))
+        if not re.fullmatch(r"cuda(?::\d+)?", device):
+            raise ValueError("local_image.device must be cuda or cuda:N")
+        offload = str(raw.get("cpu_offload", "sequential"))
+        if offload not in {"none", "model", "sequential"}:
+            raise ValueError("local_image.cpu_offload must be none, model, or sequential")
+        device_map = raw.get("device_map")
+        if device_map not in (None, "balanced"):
+            raise ValueError("local_image.device_map must be null or balanced")
+        if device_map == "balanced" and offload != "none":
+            raise ValueError("use cpu_offload: none with device_map: balanced; CPU offload requires device_map: null")
+        if int(raw.get("concurrency", 1)) != 1:
+            raise ValueError("local_image.concurrency must be 1 (one shared model instance)")
+        seed = int(raw.get("seed", 42))
+        if not 0 <= seed < 2**63:
+            raise ValueError("local_image.seed must be between 0 and 2**63 - 1")
+        negative_prompt = raw.get("negative_prompt", " ")
+        if not isinstance(negative_prompt, str):
+            raise ValueError("local_image.negative_prompt must be a string")
+        return cls(
+            model_path=str(_resolve(root, Path(model_path).expanduser())),
+            model=str(raw.get("model", "Qwen/Qwen-Image")),
+            model_revision=str(raw.get("model_revision", "")),
+            size=f"{width}*{height}",
+            num_inference_steps=steps,
+            true_cfg_scale=cfg_scale,
+            negative_prompt=negative_prompt,
+            seed=seed,
+            dtype=dtype,
+            device=device,
+            cpu_offload=offload,
+            device_map=device_map,
+        )
+
+
+@dataclass(frozen=True)
 class PipelineConfig:
     config_path: Path
     root: Path
@@ -212,6 +289,8 @@ class PipelineConfig:
     image: dict[str, Any]
     response: dict[str, Any]
     models: dict[str, ModelConfig]
+    image_backend: str = "api"
+    local_image: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: Path) -> "PipelineConfig":
@@ -259,11 +338,22 @@ class PipelineConfig:
         planner = str(generation.get("planner_model", "planner"))
         author = str(generation.get("author_model", "author"))
         response = _mapping(raw.get("response", {}), "response")
+        if not isinstance(response.get("enabled", True), bool):
+            raise ValueError("response.enabled must be true or false")
         target = str(response.get("target_model", "target"))
-        for role, name in (("planner", planner), ("author", author), ("target", target)):
+        required_models = [("planner", planner), ("author", author)]
+        if response.get("enabled", True):
+            required_models.append(("target", target))
+        for role, name in required_models:
             if name not in models:
                 raise ValueError(f"{role} model alias is not defined: {name}")
         root = _resolve(config_root, run.get("root", ".."))
+        image_backend = str(raw.get("image_backend", "api")).strip().lower()
+        if image_backend not in {"api", "local"}:
+            raise ValueError("image_backend must be api or local")
+        local_image = _mapping(raw.get("local_image", {}), "local_image")
+        if image_backend == "local":
+            LocalImageConfig.from_mapping(local_image, root)
         run_id = str(run.get("id", "value_eval_run")).strip()
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", run_id):
             raise ValueError("run.id must contain only letters, numbers, dot, underscore, and hyphen")
@@ -341,6 +431,8 @@ class PipelineConfig:
             image=_mapping(raw.get("image", {}), "image"),
             response=response,
             models=models,
+            image_backend=image_backend,
+            local_image=local_image,
         )
 
     @property
@@ -359,7 +451,19 @@ class PipelineConfig:
 
     @property
     def generate_images_during_benchmark(self) -> bool:
-        return bool(self.image.get("generate_during_benchmark", False))
+        return bool(self.active_image.get("generate_during_benchmark", False))
+
+    @property
+    def responses_enabled(self) -> bool:
+        return bool(self.response.get("enabled", True))
+
+    @property
+    def active_image(self) -> dict[str, Any]:
+        if self.image_backend == "local":
+            return self.local_image
+        if self.image_backend == "api":
+            return self.image
+        raise ValueError("image_backend must be api or local")
 
     @property
     def prepared_scenario_dir(self) -> Path:

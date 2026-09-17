@@ -63,8 +63,10 @@ generation:
   # 结构化证据、反事实及歧义检查，必须保持 true。
   strict_validation: true
 
+image_backend: local # api 使用 image；local 使用 local_image。两组配置可同时保留。
+
 image:
-  # true=benchmark 每个机制完成后立即生成图片；false=之后人工运行 generate-images。
+  # true=benchmark 每个机制完成后立即生成图片；false=run-all 在 benchmark 完成后统一生成。
   generate_during_benchmark: false
   api_key_env: DASHSCOPE_API_KEY # 图片 API Key 的环境变量名。
   model: qwen-image-2.0          # 图片模型。
@@ -78,7 +80,23 @@ image:
   max_retries: 3      # 普通失败重试次数。
   rate_limit_retries: 6 # 限流错误额外重试次数。
 
+local_image:
+  generate_during_benchmark: false # false 时 run-all 会在 benchmark 完成后统一生成图片。
+  model: Qwen-Image-2512
+  model_path: /HDD0/hanzhouyu/Qwen-image-2512 # 完整 Diffusers 权重目录；相对 run.root，也可填绝对路径。
+  model_revision: "2512" # 原地更换权重时修改此标记，使旧图片缓存失效。
+  size: "512*512"
+  num_inference_steps: 50
+  true_cfg_scale: 4.0
+  negative_prompt: "低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感。构图混乱。文字模糊，扭曲。"
+  seed: 42
+  dtype: bfloat16
+  cpu_offload: none # 与参考配置一致，权重常驻两张 GPU，不卸载到 CPU。
+  device_map: balanced # Diffusers 自动分配到 CUDA_VISIBLE_DEVICES 指定的两张卡。
+  concurrency: 1 # 本地单模型串行推理，固定为 1。
+
 response:
+  enabled: true # false：run-all 生成图片后结束，跳过回答采集。
   target_model: target # 对应 models.target。
   # image_text=真实图片+问题，开放式且不发送选项；需要图片。
   # image_mcq=真实图片+问题+A/B/C/D，只要求一个字母；需要图片。

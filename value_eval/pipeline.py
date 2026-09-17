@@ -6,13 +6,14 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from .config import PipelineConfig
+from .config import LocalImageConfig, PipelineConfig
 from .generation.input_loader import (
     expand_scenario_variants,
     load_scenario_elements,
     load_selection_pairs,
 )
 from .generation.runner import BenchmarkGenerator
+from .image_generation.local_client import inspect_local_image
 from .image_generation.runner import ImageGenerator, discover_tasks
 from .io_utils import atomic_write_json, utc_now
 from .response_collection.runner import ResponseCollector, load_samples
@@ -80,7 +81,9 @@ def inspect_pipeline(config: PipelineConfig) -> dict[str, Any]:
     if benchmark_files:
         image_tasks = sum(len(tasks) for tasks in discover_tasks(benchmark_root).values())
     response_samples = len(load_samples(config.run_root)) if benchmark_files else 0
-    required_aliases = {config.planner_model, config.author_model, config.target_model}
+    required_aliases = {config.planner_model, config.author_model}
+    if config.responses_enabled:
+        required_aliases.add(config.target_model)
     if config.scenario_source.mode == "excel":
         required_aliases.update({
             config.scenario_source.translation_model,
@@ -89,9 +92,13 @@ def inspect_pipeline(config: PipelineConfig) -> dict[str, Any]:
             config.scenario_source.element_model,
         })
     required_envs = sorted({config.models[alias].api_key_env for alias in required_aliases})
-    image_env = str(config.image.get("api_key_env", "DASHSCOPE_API_KEY"))
-    required_envs = sorted(set(required_envs + [image_env]))
-    target = config.models[config.target_model]
+    local_image_status = None
+    if config.image_backend == "api":
+        image_env = str(config.image.get("api_key_env", "DASHSCOPE_API_KEY"))
+        required_envs = sorted(set(required_envs + [image_env]))
+    else:
+        local_image_status = inspect_local_image(LocalImageConfig.from_mapping(config.active_image, config.root))
+    target = config.models.get(config.target_model)
     mode = str(config.response.get("mode", "image_text"))
     planned_capacity = len(units) * len(config.styles)
     estimated_minimum = None
@@ -129,9 +136,16 @@ def inspect_pipeline(config: PipelineConfig) -> dict[str, Any]:
         "existing_image_task_count": image_tasks,
         "existing_response_sample_count": response_samples,
         "response_mode": mode,
+        "responses_enabled": config.responses_enabled,
         "generate_images_during_benchmark": config.generate_images_during_benchmark,
-        "target_supports_images": target.supports_images,
-        "model_capability_ready": not mode.startswith("image_") or target.supports_images,
+        "image_backend": config.image_backend,
+        "local_image_status": local_image_status,
+        "target_supports_images": target.supports_images if target is not None else None,
+        "model_capability_ready": (
+            not config.responses_enabled
+            or not mode.startswith("image_")
+            or (target is not None and target.supports_images)
+        ),
         "required_api_key_envs": required_envs,
         "missing_api_key_envs": [name for name in required_envs if not os.getenv(name, "").strip()],
         "network_requests_made": False,
@@ -185,6 +199,8 @@ class Pipeline:
         return result
 
     def run_responses(self, *, force: bool = False, max_items: int = 0) -> dict[str, Any]:
+        if self.config.target_model not in self.config.models:
+            raise ValueError(f"target model alias is not defined: {self.config.target_model}")
         self.logger.info("stage=responses status=starting judge=false")
         result = ResponseCollector(self.config, logger=self.logger).run(force=force, max_items=max_items)
         self.logger.info("stage=responses status=completed result=%s", result)
@@ -248,7 +264,11 @@ class Pipeline:
                 force=force and not self.config.generate_images_during_benchmark
             )
             atomic_write_json(manifest_path, manifest)
-            manifest["stages"]["responses"] = self.run_responses(force=force)
+            if self.config.responses_enabled:
+                manifest["stages"]["responses"] = self.run_responses(force=force)
+            else:
+                manifest["stages"]["responses"] = {"status": "skipped", "reason": "response.enabled=false"}
+                self.logger.info("stage=responses status=skipped response.enabled=false")
             manifest.update({"status": "completed", "completed_at": utc_now()})
         except Exception as exc:
             manifest.update({

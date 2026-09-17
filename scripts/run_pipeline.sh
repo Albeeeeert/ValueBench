@@ -11,4 +11,4 @@ if ! "${PYTHON_BIN}" -c 'import sys; raise SystemExit(0 if sys.version_info >= (
 fi
 
 cd "${PACKAGE_ROOT}"
-"${PYTHON_BIN}" -m value_eval run-all --config "${CONFIG_PATH}" "$@"
+CUDA_VISIBLE_DEVICES=0,1 "${PYTHON_BIN}" -m value_eval run-all --config "${CONFIG_PATH}" "$@"

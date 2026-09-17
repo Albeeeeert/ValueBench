@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from ..config import PipelineConfig
-from ..io_utils import utc_now
+from ..io_utils import load_json_if_exists, sha256_file, utc_now
 from .element_pipeline import build_elements
 from .excel_reader import read_and_validate_workbook
 from .fingerprint import content_fingerprint
@@ -56,6 +56,12 @@ class ScenarioPreparationRunner:
             report = self.inspect_excel()
             report.update({"fingerprint": fingerprint, "published": False})
             return report
+
+        if options.publish and not options.force:
+            cached = self._published_cache(fingerprint, scenario_count, options.retry_fallbacks)
+            if cached is not None:
+                self.logger.info("scenario preparation reused | scenarios=%d", scenario_count)
+                return cached
 
         stage_root = self.config.run_root / "scenario_preparation"
         build_root = stage_root / "work" / fingerprint
@@ -120,6 +126,41 @@ class ScenarioPreparationRunner:
                 self.config.prepared_scenario_manifest,
                 stage_root / "report.md",
             )
+        return report
+
+    def _published_cache(
+        self, fingerprint: str, scenario_count: int, retry_fallbacks: bool
+    ) -> dict[str, Any] | None:
+        """Keep an unchanged published manifest stable for benchmark checkpoints."""
+        report = load_json_if_exists(self.config.prepared_scenario_manifest, None)
+        if not isinstance(report, dict) or (
+            report.get("fingerprint") != fingerprint
+            or report.get("valid") is not True
+            or report.get("published") is not True
+        ):
+            return None
+        entries = report.get("entries")
+        if (
+            not isinstance(entries, list)
+            or len(entries) != scenario_count
+            or not all(isinstance(entry, dict) for entry in entries)
+        ):
+            return None
+        if retry_fallbacks and any(
+            entry.get("generation_method") == "heuristic_fallback" for entry in entries
+        ):
+            return None
+        expected = {
+            str(entry.get("canonical_relative_path", "")): entry.get("sha256")
+            for entry in entries
+        }
+        actual = {
+            path.name: sha256_file(path)
+            for path in self.config.prepared_scenario_dir.glob("*.json")
+            if path.is_file()
+        }
+        if len(expected) != scenario_count or actual != expected:
+            return None
         return report
 
     def _portable_path(self, path: Path) -> str:

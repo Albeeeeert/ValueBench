@@ -17,6 +17,16 @@ dependencies = [
 [project.scripts]
 value-eval = "value_eval.cli:main"
 
+[project.optional-dependencies]
+local-image = [
+  # Match the working sd environment; install the CUDA 12.8 wheel as documented.
+  "torch==2.8.0",
+  "diffusers>=0.35",
+  "transformers>=4.51",
+  "accelerate>=1.2",
+  "safetensors>=0.4",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["value_eval*"]

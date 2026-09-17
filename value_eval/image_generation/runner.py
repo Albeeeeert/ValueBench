@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 import tempfile
@@ -11,7 +12,7 @@ from typing import Any
 
 from PIL import Image, UnidentifiedImageError
 
-from ..config import PipelineConfig
+from ..config import LocalImageConfig, PipelineConfig
 from ..io_utils import atomic_write_json, load_json, sha256_bytes, stable_id, utc_now
 from ..schemas import ImageTask
 from .client import (
@@ -20,6 +21,7 @@ from .client import (
     QwenImageClient,
     QwenImageConfig,
 )
+from .local_client import FatalLocalImageError, LocalQwenImageClient
 
 
 def _expected_size(value: str) -> tuple[int, int]:
@@ -36,7 +38,7 @@ def probe_image(data: bytes) -> tuple[str, int, int]:
             width, height = image.size
             image.verify()
     except (OSError, ValueError, UnidentifiedImageError) as exc:
-        raise ValueError(f"API response is not a valid image: {exc}") from exc
+        raise ValueError(f"generated data is not a valid image: {exc}") from exc
     if image_format not in ("png", "jpeg"):
         raise ValueError(f"unsupported image format: {image_format}")
     return image_format, width, height
@@ -96,14 +98,18 @@ class ImageGenerator:
         self,
         config: PipelineConfig,
         *,
-        client: QwenImageClient | None = None,
+        client: QwenImageClient | LocalQwenImageClient | None = None,
         logger: logging.Logger | None = None,
         incremental_force: bool = False,
     ) -> None:
         self.config = config
         self.logger = logger or logging.getLogger(__name__)
-        raw = config.image
+        raw = config.active_image
         api_key_env = str(raw.get("api_key_env", "DASHSCOPE_API_KEY"))
+        if client is None and config.image_backend == "local":
+            client = LocalQwenImageClient(
+                LocalImageConfig.from_mapping(raw, config.root), logger=self.logger
+            )
         if client is None:
             api_key = os.getenv(api_key_env, "").strip()
             if not api_key:
@@ -123,14 +129,42 @@ class ImageGenerator:
             client = QwenImageClient(image_config, logger=self.logger)
         self.client = client
         self.incremental_force = incremental_force
-        self.concurrency = int(raw.get("concurrency", 3))
+        self.concurrency = int(raw.get("concurrency", 1 if config.image_backend == "local" else 3))
         if self.concurrency < 1:
             raise ValueError("image.concurrency must be positive")
+        if config.image_backend == "local" and self.concurrency != 1:
+            raise ValueError("local_image.concurrency must be 1")
+        self.generation_settings = (
+            client.generation_settings() if isinstance(client, LocalQwenImageClient) else {
+                "backend": config.image_backend,
+                "model": client.config.model,
+                "size": client.config.size,
+                "prompt_extend": bool(raw.get("prompt_extend", False)),
+            }
+        )
+        self.generation_fingerprint = stable_id(
+            json.dumps(self.generation_settings, sort_keys=True, ensure_ascii=False), length=64
+        )
         self._incremental_lock = threading.Lock()
         self._incremental_executor: ThreadPoolExecutor | None = None
         self._incremental_tasks: dict[str, dict[str, ImageTask]] = {}
         self._incremental_futures: dict[Future[None], tuple[str, str]] = {}
-        self._incremental_fatal_errors: list[FatalImageApiError] = []
+        self._incremental_fatal_errors: list[FatalImageApiError | FatalLocalImageError] = []
+
+    def close(self) -> None:
+        if isinstance(self.client, LocalQwenImageClient):
+            self.client.close()
+
+    def _manifest_matches(self, previous: Any) -> bool:
+        if not isinstance(previous, dict):
+            return False
+        if previous.get("model") != self.client.config.model or previous.get("size") != self.client.config.size:
+            return False
+        fingerprint = previous.get("generation_fingerprint")
+        if fingerprint:
+            return fingerprint == self.generation_fingerprint
+        # Legacy manifests were produced by the API backend only.
+        return self.config.image_backend == "api" and previous.get("backend", "api") == "api"
 
     def _profile_root(self, profile: str) -> Path:
         return self.config.run_root / "images" / profile
@@ -145,6 +179,9 @@ class ImageGenerator:
             "profile": profile,
             "model": self.client.config.model,
             "size": self.client.config.size,
+            "backend": self.config.image_backend,
+            "generation_settings": self.generation_settings,
+            "generation_fingerprint": self.generation_fingerprint,
             "updated_at": utc_now(),
             "task_count": len(tasks),
             "completed_count": sum(task.status in ("generated", "reused") for task in tasks),
@@ -170,6 +207,7 @@ class ImageGenerator:
             width=int(row.get("width", 0)),
             height=int(row.get("height", 0)),
             request_ids=[str(value) for value in row.get("request_ids", [])],
+            seed=int(row["seed"]) if row.get("seed") is not None else None,
             error=str(row.get("error", "")),
         )
 
@@ -180,11 +218,7 @@ class ImageGenerator:
         path = self._manifest(profile)
         if path.is_file() and not self.incremental_force:
             previous = load_json(path)
-            if (
-                isinstance(previous, dict)
-                and previous.get("model") == self.client.config.model
-                and previous.get("size") == self.client.config.size
-            ):
+            if self._manifest_matches(previous):
                 for row in previous.get("tasks", []):
                     if not isinstance(row, dict) or not row.get("image_key"):
                         continue
@@ -218,6 +252,8 @@ class ImageGenerator:
         profile = incoming.profile
         submitted: Future[None] | None = None
         with self._incremental_lock:
+            if self._incremental_fatal_errors:
+                raise self._incremental_fatal_errors[0]
             tasks = self._load_incremental_tasks(profile)
             task = tasks.get(incoming.image_key)
             if task is not None:
@@ -262,6 +298,7 @@ class ImageGenerator:
             )
 
     def _incremental_task_done(self, future: Future[None], profile: str) -> None:
+        to_cancel: list[Future[None]] = []
         task_key = "unknown"
         status = "cancelled" if future.cancelled() else "unknown"
         completed = 0
@@ -269,20 +306,26 @@ class ImageGenerator:
         with self._incremental_lock:
             if not future.cancelled():
                 error = future.exception()
-                if isinstance(error, FatalImageApiError):
+                if isinstance(error, (FatalImageApiError, FatalLocalImageError)):
                     self._incremental_fatal_errors.append(error)
+                    to_cancel = [other for other in self._incremental_futures if other is not future]
             saved = self._incremental_futures.pop(future, None)
             if saved is not None:
                 task_key = saved[1]
             tasks = self._incremental_tasks.get(profile, {})
             task = tasks.get(task_key)
             if task is not None:
+                if future.cancelled():
+                    task.status, task.error = "aborted", "cancelled after a fatal image generation error"
                 status = task.status
             completed = sum(
                 item.status in ("generated", "reused") for item in tasks.values()
             )
             total = len(tasks)
             self._save_incremental_profile(profile)
+        # Future.cancel() invokes callbacks, so it must run outside the manifest lock.
+        for other in to_cancel:
+            other.cancel()
         log = self.logger.info if status in ("generated", "reused") else self.logger.warning
         log(
             "image task finished | profile=%s | key=%s | status=%s | completed=%d/%d",
@@ -318,7 +361,7 @@ class ImageGenerator:
                     future.result()
                 except CancelledError:
                     continue
-                except FatalImageApiError as exc:
+                except (FatalImageApiError, FatalLocalImageError) as exc:
                     fatal = fatal or exc
                     for other in futures:
                         if other is not future:
@@ -326,7 +369,11 @@ class ImageGenerator:
         finally:
             if executor is not None:
                 executor.shutdown(wait=True, cancel_futures=True)
+            self._incremental_executor = None
+            self.close()
         with self._incremental_lock:
+            fatal = fatal or next(iter(self._incremental_fatal_errors), None)
+            self._incremental_fatal_errors.clear()
             for profile in self._incremental_tasks:
                 self._save_incremental_profile(profile)
             summary = {
@@ -355,9 +402,7 @@ class ImageGenerator:
         if force or not manifest_path.is_file():
             return
         previous = load_json(manifest_path)
-        if not isinstance(previous, dict):
-            return
-        if previous.get("model") != self.client.config.model or previous.get("size") != self.client.config.size:
+        if not self._manifest_matches(previous):
             return
         old_tasks = {
             str(row.get("image_key")): row
@@ -385,11 +430,14 @@ class ImageGenerator:
             task.image_model = str(old.get("image_model", self.client.config.model))
             task.image_format, task.width, task.height = image_format, width, height
             task.request_ids = [str(value) for value in old.get("request_ids", [])]
+            task.seed = int(old["seed"]) if old.get("seed") is not None else None
 
     def _generate(self, profile: str, task: ImageTask) -> None:
-        client = self.client.clone()
         task.attempts += 1
         try:
+            client = self.client.clone()
+            if isinstance(client, LocalQwenImageClient):
+                task.seed = client.config.seed
             data = client.generate(task.prompt)
             image_format, width, height = probe_image(data)
             if (width, height) != _expected_size(client.config.size):
@@ -417,7 +465,7 @@ class ImageGenerator:
             task.error = ""
         except ImageModerationError as exc:
             task.status, task.error = "moderated", str(exc)
-        except FatalImageApiError as exc:
+        except (FatalImageApiError, FatalLocalImageError) as exc:
             task.status, task.error = "aborted", str(exc)
             raise
         except Exception as exc:
@@ -425,6 +473,12 @@ class ImageGenerator:
             self.logger.exception("image task failed key=%s", task.image_key)
 
     def run(self, *, force: bool = False, max_items: int = 0) -> dict[str, Any]:
+        try:
+            return self._run(force=force, max_items=max_items)
+        finally:
+            self.close()
+
+    def _run(self, *, force: bool, max_items: int) -> dict[str, Any]:
         discovered = discover_tasks(self.config.run_root / "benchmark")
         summary: dict[str, Any] = {"profiles": {}}
         for profile, tasks in discovered.items():
@@ -441,14 +495,16 @@ class ImageGenerator:
                 for future in as_completed(futures):
                     try:
                         future.result()
-                    except FatalImageApiError:
-                        for other in futures:
-                            other.cancel()
+                    except (FatalImageApiError, FatalLocalImageError):
+                        for other, task in futures.items():
+                            if other.cancel():
+                                task.status, task.error = "aborted", "cancelled after a fatal image generation error"
                         self._save(profile, tasks)
                         raise
                     self._save(profile, tasks)
             finally:
                 executor.shutdown(wait=True, cancel_futures=True)
+                self._save(profile, tasks)
             completed = sum(task.status in ("generated", "reused") for task in tasks)
             failed = len(tasks) - completed
             self._save(profile, tasks)

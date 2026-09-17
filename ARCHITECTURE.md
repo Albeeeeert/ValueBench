@@ -53,7 +53,7 @@ scenario_elements + manifest + report
 planner 生成题型蓝图 -> single author 生成题目
                     -> both 模式再固定图片、无蓝图生成 instruction
   v
-image_description -> (可选：每机制 checkpoint 后) 图片 API -> 图片校验/manifest
+image_description -> (可选：每机制 checkpoint 后) 图片 API / 本地 Qwen-Image -> 图片校验/manifest
   v
 图片/问题 -> target model -> raw response JSONL
 ```
@@ -73,10 +73,14 @@ element 可以循环复用，但 `(scenario_id, element_id, variant_index)` 构�
 不包含密钥。Benchmark、图片和回应也使用内容键恢复。输入或配置变化时不会
 错误复用旧结果。
 
-图片生成可通过 `image.generate_during_benchmark` 流式开启。流式任务与文本生成使用独立
+`image_backend: api | local` 分别选择 `image` 和 `local_image`，两组配置共存。
+本地后端通过 Diffusers 延迟加载模型，任务共享模型和推理锁，阶段结束释放资源；API 模式
+不依赖 PyTorch。图片 manifest 记录所选后端的生成参数指纹，本地任务另记录实际 seed。
+
+图片生成可通过所选后端的 `generate_during_benchmark` 流式开启。流式任务与文本生成使用独立
 线程池，按 `shared_image_id` 去重，并沿用人工 images 阶段的 manifest、文件校验和恢复逻辑。
 benchmark 完成后会补扫整个 benchmark 根目录，故中途失败或进程重启后仍可通过
-`generate-images` 继续；已通过尺寸、格式和 SHA256 校验的文件会直接复用。图片请求发生在
+`generate-images` 继续；参数指纹匹配且已通过尺寸、格式和 SHA256 校验的文件会直接复用。图片请求发生在
 最终跨 shard 重复校验之前，后者若失败不会回滚已发生的外部图片费用。
 
 所有 JSON checkpoint 使用同目录临时文件和原子替换。回应逐条追加 JSONL 并执行 `fsync`。

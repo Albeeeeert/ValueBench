@@ -85,6 +85,7 @@ class ImageTask:
     width: int = 0
     height: int = 0
     request_ids: list[str] = field(default_factory=list)
+    seed: int | None = None
     error: str = ""
 
     def as_dict(self) -> dict[str, Any]:
