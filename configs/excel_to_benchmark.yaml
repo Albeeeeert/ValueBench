@@ -15,7 +15,7 @@ scenario_source:
   # excel：先从工作簿构建场景，再把本次 run 的场景交给 benchmark 阶段。
   mode: excel
   # 输入工作簿和工作表名称；正式运行时替换为自己的文件。
-  xlsx: inputs/excel/value.xlsx
+  xlsx: inputs/excel/examples/value_first_2_rows.xlsx
   sheet_name: "价值观目录及评判标准"
   # level1=按一级分类分块；fixed_rows=按 chunk_size 固定行数分块。
   chunk_by: level1
