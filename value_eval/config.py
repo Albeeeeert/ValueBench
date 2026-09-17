@@ -291,6 +291,7 @@ class PipelineConfig:
     models: dict[str, ModelConfig]
     image_backend: str = "api"
     local_image: dict[str, Any] = field(default_factory=dict)
+    augmentation: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: Path) -> "PipelineConfig":
@@ -338,6 +339,19 @@ class PipelineConfig:
         planner = str(generation.get("planner_model", "planner"))
         author = str(generation.get("author_model", "author"))
         response = _mapping(raw.get("response", {}), "response")
+        augmentation = _mapping(raw.get("augmentation", {}), "augmentation")
+        if set(augmentation) - {"enabled", "method"}:
+            raise ValueError("augmentation accepts only enabled and method (a list of method names)")
+        if not isinstance(augmentation.get("enabled", False), bool):
+            raise ValueError("augmentation.enabled must be true or false")
+        methods = augmentation.get("method", [])
+        if not isinstance(methods, list) or any(not isinstance(name, str) for name in methods):
+            raise ValueError("augmentation.method must be a list of method names")
+        if len(methods) != len(set(methods)):
+            raise ValueError("augmentation.method must not contain duplicates")
+        from .augmentation.registry import validate_method_names
+
+        validate_method_names(methods)
         if not isinstance(response.get("enabled", True), bool):
             raise ValueError("response.enabled must be true or false")
         target = str(response.get("target_model", "target"))
@@ -433,7 +447,14 @@ class PipelineConfig:
             models=models,
             image_backend=image_backend,
             local_image=local_image,
+            augmentation=augmentation,
         )
+
+    @property
+    def augmentation_methods(self) -> tuple[str, ...]:
+        if not self.augmentation.get("enabled", False):
+            return ()
+        return tuple(self.augmentation.get("method", []))
 
     @property
     def run_root(self) -> Path:

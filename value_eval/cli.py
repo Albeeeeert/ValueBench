@@ -9,6 +9,7 @@ from typing import Sequence
 
 from .config import PACKAGE_ROOT, PipelineConfig, load_env_file
 from .pipeline import Pipeline, inspect_pipeline
+from .augmentation.runner import AugmentationRunner
 from .value_to_scenario import PreparationOptions
 
 
@@ -29,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
             "validate-input",
             "generate-benchmark",
             "generate-images",
+            "generate-augmentations",
             "collect-responses",
             "run-all",
         ),
@@ -36,6 +38,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--env-file", type=Path, help="dotenv or PowerShell env file; overrides run.env_file")
     parser.add_argument("--profile", action="append", choices=("hh", "bh"))
+    parser.add_argument("--method", action="append", help="Select an enabled augmentation method; repeat to select several.")
+    parser.add_argument("--dataset", action="append", help="Select response datasets: base, enabled_augmentations, or an enabled method.")
     parser.add_argument(
         "--style",
         choices=("both", "awareness", "instruction"),
@@ -63,6 +67,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.method and args.command != "generate-augmentations":
+        parser.error("--method is only supported by generate-augmentations")
+    if args.dataset and args.command not in {"collect-responses", "run-all"}:
+        parser.error("--dataset is only supported by collect-responses and run-all")
     if args.max_items is not None and args.max_items < 0:
         parser.error("--max-items must be zero or positive")
     if args.variants_per_scenario is not None and args.variants_per_scenario < 0:
@@ -85,6 +93,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     if args.response_mode:
         config = replace(config, response={**config.response, "mode": args.response_mode})
+    if args.dataset:
+        config = replace(config, response={**config.response, "datasets": args.dataset})
     if (
         args.max_items is not None
         and args.command in ("generate-benchmark", "run-all")
@@ -100,6 +110,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     read_only = args.command.startswith("validate-") or args.dry_run
     logger = logging.getLogger("value_eval.preflight") if read_only else None
     pipeline = Pipeline(config, logger=logger)
+    if args.command == "generate-augmentations":
+        if args.dry_run:
+            result = AugmentationRunner(config).inspect(methods=args.method, max_items=args.max_items or 0)
+            result.update({"command": args.command, "dry_run": True})
+        else:
+            result = pipeline.run_augmentations(methods=args.method, force=args.force, max_items=args.max_items or 0)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
     if args.command == "validate-excel":
         result = pipeline.inspect_excel()
         print(json.dumps(result, ensure_ascii=False, indent=2))

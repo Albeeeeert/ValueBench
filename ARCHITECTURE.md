@@ -31,6 +31,7 @@ tests                       离线单元测试与端到端测试
 | `generation/` | Plan-Game planner 到 single author 的题目生成 |
 | `image_generation/` | 图片任务去重、请求、文件校验和恢复 |
 | `response_collection/` | 构造目标请求并保存模型原始回应 |
+| `augmentation/` | 筛选 HH-instruction，执行独立方法模块，保存增强样本和完整数据集清单 |
 | `pipeline.py` | 跨阶段编排和总运行 manifest |
 | `cli.py` | 唯一用户入口 |
 
@@ -55,7 +56,9 @@ planner 生成题型蓝图 -> single author 生成题目
   v
 image_description -> (可选：每机制 checkpoint 后) 图片 API / 本地 Qwen-Image -> 图片校验/manifest
   v
-图片/问题 -> target model -> raw response JSONL
+可选增强：HH-instruction -> FigStep 文字图片/提示词 -> dataset manifest
+  v
+原始及所选增强图文 -> target model -> raw response JSONL
 ```
 
 benchmark 每 200 个机制形成一个恢复 shard；同 shard 的 HH/BH 并行，每个 profile 内按配置

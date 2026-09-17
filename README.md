@@ -4,12 +4,18 @@
 开始构建场景，也支持直接使用已准备好的场景数据集，随后执行严格 HH/BH Plan-Game 单生成器、
 图片生成和目标模型原始回应采集。项目不包含 judge、自动评分或答案判定。
 
+支持可选的 HH-instruction 增强：主配置使用 `augmentation.enabled` 和
+`augmentation.method: [figstep]`，方法参数放在各自模块目录。generation 仍可生成四类，
+增强只处理 HH-instruction；缺少该类时开启增强会报错。已有 benchmark 可通过
+`generate-augmentations` 独立补做。详见 [数据增强](docs/AUGMENTATION.md)，验证配置见
+[excel_to_benchmark_figstep_check.yaml](configs/excel_to_benchmark_figstep_check.yaml)。
+
 完整链路如下：
 
 ```text
 价值观 Excel -> taxonomy 翻译/提取 -> 场景拆分 -> elements
              -> Plan-Game planner + single author
-             -> 图片生成 -> 目标模型原始回应 JSONL
+             -> 图片生成 -> 可选数据增强 -> 目标模型原始回应 JSONL
 ```
 
 代码边界见 [ARCHITECTURE.md](ARCHITECTURE.md)，配置字段见
@@ -44,13 +50,14 @@ value-eval --help
 
 ## 选择配置
 
-`configs/` 只保留三份按用途命名的配置，文件内均有中文字段说明：
+`configs/` 提供三份通用配置和一份 FigStep 验证配置，文件内均有中文字段说明：
 
 | 配置 | 用途 |
 | --- | --- |
 | `hh_bh_4000.yaml` | 使用固定 1000 个机制严格复现 HH/BH 旧 4000 基准；也可作为扩增实验起点。 |
 | `prepared_scenarios.yaml` | 已有 `scenario_elements` 和 manifest 时使用；默认是两个场景的小样本模板。 |
 | `excel_to_benchmark.yaml` | 从中文 Excel 构建场景，再生成 benchmark、图片和原始回应。 |
+| `excel_to_benchmark_figstep_check.yaml` | 验证四类原题、FigStep 增强和回应采集。 |
 
 运行时始终通过 `--config` 明确选择；省略时默认使用 `prepared_scenarios.yaml`。
 

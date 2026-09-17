@@ -30,3 +30,6 @@ local-image = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["value_eval*"]
+
+[tool.setuptools.package-data]
+"value_eval.augmentation.methods.figstep" = ["config.yaml", "assets/fonts/*.TTF"]

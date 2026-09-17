@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 from .config import LocalImageConfig, PipelineConfig
+from .augmentation.registry import load_method
+from .augmentation.runner import AugmentationRunner, load_sources, publish_dataset, response_datasets, validate_generation_scope
 from .generation.input_loader import (
     expand_scenario_variants,
     load_scenario_elements,
@@ -58,6 +60,10 @@ def build_logger(config: PipelineConfig) -> logging.Logger:
 
 
 def inspect_pipeline(config: PipelineConfig) -> dict[str, Any]:
+    validate_generation_scope(config)
+    augmentation_settings = {name: load_method(name).snapshot for name in config.augmentation_methods}
+    if config.responses_enabled:
+        response_datasets(config)
     effective = generation_config(config)
     prepared_ready = effective.input_dir.is_dir() and (
         effective.input_manifest is None or effective.input_manifest.is_file()
@@ -126,6 +132,8 @@ def inspect_pipeline(config: PipelineConfig) -> dict[str, Any]:
         "excel": excel,
         "profiles": list(config.profiles),
         "styles": list(config.styles),
+        "augmentation_methods": list(config.augmentation_methods),
+        "augmentation_settings": augmentation_settings,
         "planned_questions_per_profile": min(
             planned_capacity,
             config.max_items_per_profile or planned_capacity,
@@ -196,6 +204,14 @@ class Pipeline:
         self.logger.info("stage=images status=starting")
         result = ImageGenerator(self.config, logger=self.logger).run(force=force, max_items=max_items)
         self.logger.info("stage=images status=completed result=%s", result)
+        if (self.config.run_root / "dataset" / "manifest.json").is_file():
+            publish_dataset(self.config)
+        return result
+
+    def run_augmentations(self, *, methods: list[str] | None = None, force: bool = False, max_items: int = 0) -> dict[str, Any]:
+        self.logger.info("stage=augmentations status=starting")
+        result = AugmentationRunner(self.config, logger=self.logger).run(methods=methods, force=force, max_items=max_items)
+        self.logger.info("stage=augmentations status=completed result=%s", result)
         return result
 
     def run_responses(self, *, force: bool = False, max_items: int = 0) -> dict[str, Any]:
@@ -237,6 +253,11 @@ class Pipeline:
         force: bool = False,
         retry_fallbacks: bool = False,
     ) -> dict[str, Any]:
+        validate_generation_scope(self.config)
+        for name in self.config.augmentation_methods:
+            load_method(name)  # Validate local method assets before spending on generation.
+        if self.config.responses_enabled:
+            response_datasets(self.config)
         manifest_path = self.config.run_root / "run_manifest.json"
         manifest: dict[str, Any] = {
             "schema_version": "value-eval-run-manifest-v1",
@@ -260,9 +281,22 @@ class Pipeline:
                 atomic_write_json(manifest_path, manifest)
             manifest["stages"]["benchmark"] = self.run_benchmark(force=force)
             atomic_write_json(manifest_path, manifest)
+            if self.config.augmentation_methods:
+                load_sources(self.config.run_root)
             manifest["stages"]["images"] = self.run_images(
                 force=force and not self.config.generate_images_during_benchmark
             )
+            atomic_write_json(manifest_path, manifest)
+            if self.config.augmentation_methods:
+                augmentation = self.run_augmentations(force=force)
+                manifest["stages"]["augmentations"] = augmentation["methods"]
+                manifest["stages"]["dataset"] = augmentation["dataset"]
+                if augmentation["dataset"]["status"] != "completed":
+                    raise RuntimeError("dataset is incomplete; inspect dataset/manifest.json")
+            else:
+                manifest["stages"]["augmentations"] = {"status": "skipped"}
+                if (self.config.run_root / "dataset" / "manifest.json").is_file():
+                    manifest["stages"]["dataset"] = publish_dataset(self.config)
             atomic_write_json(manifest_path, manifest)
             if self.config.responses_enabled:
                 manifest["stages"]["responses"] = self.run_responses(force=force)

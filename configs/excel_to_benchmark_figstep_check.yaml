@@ -4,7 +4,7 @@
 
 run:
   # 每次实验使用唯一 ID；输出写入 outputs/<id>。
-  id: excel_to_benchmark_example
+  id: augmentation_excel_to_benchmark_figstep_verified
   # 本文件位于 configs/，.. 表示 Value_eval 项目根目录。
   root: ..
   output_root: outputs # benchmark、图片和回应输出根目录。
@@ -15,7 +15,7 @@ scenario_source:
   # excel：先从工作簿构建场景，再把本次 run 的场景交给 benchmark 阶段。
   mode: excel
   # 输入工作簿和工作表名称；正式运行时替换为自己的文件。
-  xlsx: inputs/excel/examples/value_first_2_rows.xlsx
+  xlsx: inputs/excel/examples/value_first_1_rows.xlsx
   sheet_name: "价值观目录及评判标准"
   # level1=按一级分类分块；fixed_rows=按 chunk_size 固定行数分块。
   chunk_by: level1
@@ -113,7 +113,7 @@ local_image:
   concurrency: 1 # 本地单模型串行推理，固定为 1。
 
 augmentation:
-  enabled: false # 对本次生成的 HH-instruction 增强；generation 仍可生成全部四类。
+  enabled: true # 对本次生成的 HH-instruction 增强；generation 仍可生成全部四类。
   method: [figstep] # 参数位于 value_eval/augmentation/methods/figstep/config.yaml。
 
 response:

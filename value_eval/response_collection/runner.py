@@ -9,6 +9,8 @@ from typing import Any
 from ..clients.openai_compat import FatalModelError, OpenAICompatibleClient
 from ..config import PipelineConfig
 from ..io_utils import append_jsonl, atomic_write_json, iter_jsonl, load_json, stable_id, utc_now
+from ..augmentation.base import resolve_artifact
+from ..augmentation.runner import load_augmented_samples, response_datasets
 
 
 MODES = {"image_text", "image_mcq", "description_text", "description_mcq"}
@@ -21,6 +23,13 @@ class ResponseSample:
     image_path: Path | None
     image_sha256: str
     image_status: str
+    dataset: str = "base"
+    source: dict[str, Any] | None = None
+    extra_image_paths: tuple[Path, ...] = ()
+
+    @property
+    def image_paths(self) -> list[Path]:
+        return ([self.image_path] if self.image_path else []) + list(self.extra_image_paths)
 
     @property
     def benchmark_id(self) -> str:
@@ -88,6 +97,34 @@ def target_prompt(sample: ResponseSample, mode: str) -> str:
     return "\n".join(sections)
 
 
+def load_response_samples(config: PipelineConfig) -> list[ResponseSample]:
+    samples: list[ResponseSample] = []
+    for dataset in response_datasets(config):
+        if dataset == "base":
+            samples.extend(load_samples(config.run_root))
+            continue
+        for row in load_augmented_samples(config, dataset):
+            source = row["source"]
+            original = source["benchmark"]
+            # Construct the model-facing row explicitly. Reference answers and audits
+            # remain in provenance; no baseline MCQ fields are inherited.
+            benchmark = {
+                "benchmark_id": row["sample_id"], "profile": source["profile"],
+                "scenario_question_style": source["style"], "question": row["input"]["text"],
+                **{key: original.get(key, "") for key in (
+                    "theme", "subdimension", "source_scenario_id", "source_element_id",
+                )},
+            }
+            assets = row["input"]["images"]
+            paths = [resolve_artifact(config.run_root, asset["path"]) for asset in assets]
+            image_hash = assets[0]["sha256"] if len(assets) == 1 else stable_id(*(a["sha256"] for a in assets), length=64)
+            samples.append(ResponseSample(
+                benchmark, config.run_root / "augmentations" / dataset / "samples.jsonl",
+                paths[0], image_hash, "generated", dataset, source, tuple(paths[1:]),
+            ))
+    return samples
+
+
 class ResponseCollector:
     """Send benchmark inputs to the target and persist raw responses only."""
 
@@ -100,6 +137,7 @@ class ResponseCollector:
     ) -> None:
         self.config = config
         self.logger = logger or logging.getLogger(__name__)
+        self.datasets = response_datasets(config)
         self.target = target or OpenAICompatibleClient(config.models[config.target_model], logger=self.logger)
         self.mode = str(config.response.get("mode", "image_text"))
         self.concurrency = int(config.response.get("concurrency", 2))
@@ -111,13 +149,18 @@ class ResponseCollector:
         if self.concurrency < 1:
             raise ValueError("response.concurrency must be positive")
 
-    def _response_path(self, profile: str) -> Path:
+    def _response_path(self, profile: str, dataset: str = "base") -> Path:
         model_slug = "".join(character if character.isalnum() or character in "._-" else "_" for character in self.target.config.model)
-        return self.config.run_root / "responses" / model_slug / self.mode / f"{profile}.jsonl"
+        root = self.config.run_root / "responses" / model_slug / self.mode
+        if dataset != "base":
+            return root / "augmentations" / f"{dataset}.jsonl"
+        return root / f"{profile}.jsonl"
 
     def _sample_key(self, sample: ResponseSample, prompt: str) -> str:
         return stable_id(
             self.config.execution_run_id,
+            sample.profile,
+            sample.dataset,
             sample.benchmark_id,
             self.target.config.model,
             self.mode,
@@ -140,6 +183,9 @@ class ResponseCollector:
             "sample_key": key,
             "run_id": self.config.execution_run_id,
             "benchmark_id": sample.benchmark_id,
+            "dataset": sample.dataset,
+            "method": sample.dataset if sample.dataset != "base" else "",
+            "source_benchmark_id": sample.source["benchmark_id"] if sample.source else sample.benchmark_id,
             "profile": sample.profile,
             "question_style": str(
                 sample.benchmark.get("scenario_question_style")
@@ -158,6 +204,7 @@ class ResponseCollector:
                 if sample.image_path else ""
             ),
             "image_sha256": sample.image_sha256,
+            "image_paths": [path.relative_to(self.config.run_root).as_posix() for path in sample.image_paths],
             "image_status": sample.image_status,
             "created_at": utc_now(),
         }
@@ -173,7 +220,7 @@ class ResponseCollector:
         client = self.target.clone()
         try:
             result = client.chat([
-                client.user_message(prompt, [sample.image_path] if self.mode.startswith("image_") and sample.image_path else [])
+                client.user_message(prompt, sample.image_paths if self.mode.startswith("image_") else [])
             ])
         except FatalModelError:
             raise
@@ -194,15 +241,15 @@ class ResponseCollector:
         }
 
     def run(self, *, force: bool = False, max_items: int = 0) -> dict[str, Any]:
-        samples = load_samples(self.config.run_root)
+        samples = load_response_samples(self.config)
         if max_items > 0:
             samples = samples[:max_items]
         completed_keys: set[str] = set()
         if not force:
-            for profile in {sample.profile for sample in samples}:
+            for profile, dataset in {(sample.profile, sample.dataset) for sample in samples}:
                 completed_keys.update(
                     str(row.get("sample_key"))
-                    for row in iter_jsonl(self._response_path(profile))
+                    for row in iter_jsonl(self._response_path(profile, dataset))
                     if row.get("status") == "completed"
                 )
         pending: list[ResponseSample] = []
@@ -235,7 +282,8 @@ class ResponseCollector:
                     for other in futures:
                         other.cancel()
                     raise
-                append_jsonl(self._response_path(futures[future].profile), record)
+                sample = futures[future]
+                append_jsonl(self._response_path(sample.profile, sample.dataset), record)
                 status = str(record["status"])
                 if status == "completed":
                     counts["completed"] += 1
@@ -261,6 +309,7 @@ class ResponseCollector:
             "schema_version": "value-eval-response-manifest-v1",
             "run_id": self.config.execution_run_id,
             "mode": self.mode,
+            "datasets": list(self.datasets),
             "target": self.target.config.public_dict(),
             "sample_count": len(samples),
             "counts": counts,

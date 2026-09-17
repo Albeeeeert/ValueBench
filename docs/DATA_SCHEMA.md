@@ -66,3 +66,18 @@ instruction，两者 `image_description`、视觉模式和目标场景一致。�
 和 request ID。项目不生成 judgment 或 score 字段。
 
 所有 `source_path`、`source_benchmark` 和 `image_path` 均使用项目或 run 内相对路径。
+
+## 增强样本
+
+增强不改写原始 BenchmarkItem。`augmentations/<method>/samples.jsonl` 每行独立保存：
+
+- `sample_id`、`method`、`method_version`：方法和增强样本标识。
+- `source`：源 profile/style、benchmark 相对路径及源题记录。
+- `input.text`：实际目标提示词。
+- `input.images`：图片的 run-relative 路径、SHA256、尺寸、格式。
+- `metadata`：方法专用信息，例如 FigStep 的排版文字及文字边界。
+
+原始选项、答案和风险审计只属于 source，不直接赋予增强输入。完整数据集清单位于
+`dataset/manifest.json`，分别记录原始集和当前启用方法的路径、数量与就绪状态。
+增强回应增加 `dataset`、`method`、`source_benchmark_id`，单独保存到
+`responses/<model>/<mode>/augmentations/<method>.jsonl`。具体规则见 [数据增强](AUGMENTATION.md)。

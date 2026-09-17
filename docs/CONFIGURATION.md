@@ -1,5 +1,10 @@
 # 配置字段手册
 
+可选增强使用 `augmentation: {enabled: true, method: [figstep]}`，方法参数位于
+`value_eval/augmentation/methods/<name>/config.yaml`。增强范围固定为实际生成的
+HH-instruction，generation 可包含全部四类。`response.datasets` 选择回应子集。
+详见 [增强配置与独立命令](AUGMENTATION.md)。
+
 所有相对路径均以 `run.root` 指向的项目根目录解析。密钥字段只填写环境变量名。
 
 ## run

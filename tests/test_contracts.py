@@ -286,6 +286,22 @@ class ContractTest(unittest.TestCase):
             )
         self.assertEqual(result.content, "fallback text")
 
+    def test_successful_completion_error_words_are_not_api_errors(self) -> None:
+        config = ModelConfig(
+            name="test", model="test-model", base_url="https://example.invalid/v1",
+            api_key_env="VALUE_EVAL_TEST_KEY", max_retries=1,
+        )
+        content = 'Discuss unauthorized access, account balance, and possible cybersecurity risk.'
+        data = {"choices": [{"message": {"content": content, "reasoning_content": "authentication failed is an example phrase"}}]}
+        response = Mock(status_code=200)
+        response.text = json.dumps(data)
+        response.json.return_value = data
+        session = Mock()
+        session.post.return_value = response
+        with patch.dict(os.environ, {"VALUE_EVAL_TEST_KEY": "test-key"}):
+            result = OpenAICompatibleClient(config, session=session).chat([{"role": "user", "content": "test"}])
+        self.assertEqual(result.content, content)
+
 
 if __name__ == "__main__":
     unittest.main()

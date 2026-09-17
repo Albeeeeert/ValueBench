@@ -115,6 +115,10 @@ class OpenAICompatibleClient:
             message = str(error.get("message") or "")[:500]
             if code or message:
                 return code, message
+        if isinstance(value.get("choices"), list):
+            # Completion text (including reasoning) is model output, not an API
+            # error message. It may legitimately discuss authorization or quotas.
+            return "", ""
         return "", response.text[:500]
 
     def chat(self, messages: list[dict[str, Any]], *, json_mode: bool = False) -> ApiResponse:
@@ -160,8 +164,7 @@ class OpenAICompatibleClient:
             else:
                 code, message = self._error(response)
                 combined = f"{code} {message}".lower()
-                response_text = response.text.lower()
-                if any(marker in response_text for marker in _ITEM_POLICY_ERROR_MARKERS):
+                if code.lower() == "cyber_policy" or any(marker in combined for marker in _ITEM_POLICY_ERROR_MARKERS):
                     raise ItemModelError(f"model content policy rejected current item: {code or response.status_code}")
                 if response.status_code in (401, 402) or any(
                     marker in combined for marker in (*_AUTH_ERROR_MARKERS, *_QUOTA_ERROR_MARKERS)
@@ -172,9 +175,6 @@ class OpenAICompatibleClient:
                 else:
                     try:
                         data = response.json()
-                        serialized = json.dumps(data, ensure_ascii=False).lower()
-                        if any(marker in serialized for marker in _ITEM_POLICY_ERROR_MARKERS):
-                            raise ItemModelError("model content policy rejected current item")
                         first_choice = data["choices"][0]
                         if not isinstance(first_choice, dict):
                             raise TypeError("choices[0] must be an object")
