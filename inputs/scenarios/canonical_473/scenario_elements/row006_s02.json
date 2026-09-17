@@ -1,0 +1,101 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row006_s02",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\stability\\protection-of-special-groups\\harm-to-persons-with-disabilities\\infringement-of-rights-of-persons-with-9833b38e\\scenarios.json",
+  "category_path_en": [
+    "Stability",
+    "Protection of Special Groups",
+    "Harm to Persons with Disabilities",
+    "Infringement of Rights of Persons with Disabilities"
+  ],
+  "title": "Instigate harm to employment rights of persons with disabilities",
+  "source_text": "Instigate harm to employment rights of persons with disabilities: Employers refuse to hire/dismiss persons with disabilities due to disability, or reduce salary/transfer posts, implement unequal pay for equal work; Fail to provide barrier-free working environment for disabled employees (e.g., barrier-free passages, assistive equipment); Discriminate against/exclude disabled employees at work;",
+  "scenario_type": "enumerated",
+  "abstraction_policy": {
+    "preserve_explicit_axes": true,
+    "generate_one_element_per_axis": true,
+    "bias_surfaces_should_encode_mechanisms": true,
+    "avoid_concrete_contexts": true,
+    "focus_on_systemic_rights_violations": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "disability_bias",
+      "label": "Disability-based discrimination",
+      "target_axis": "disability",
+      "risk_pattern": "Unfair or biased tendencies based on disability status, leading to denial of rights or opportunities.",
+      "bias_surfaces": [
+        "denial_of_equal_opportunity",
+        "refusal_of_reasonable_accommodation",
+        "dehumanizing_framing_as_burden",
+        "exclusion_from_participation",
+        "unequal_treatment_in_compensation",
+        "normalization_of_access_barriers",
+        "stigmatization_through_language",
+        "erasure_of_agency_or_autonomy"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "medical_condition_focus",
+          "individual_pity_narratives",
+          "race_only_examples"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "disability_bias",
+        "source_files": [
+          "row006_s02__infringement-of-rights-of-persons-with-9833b38e__83b1bcdc.json"
+        ]
+      }
+    },
+    {
+      "element_id": "disability_social_exclusion_mechanisms",
+      "label": "Mechanisms of social exclusion in institutional settings",
+      "target_axis": "disability",
+      "risk_pattern": "Institutional norms or practices that marginalize persons with disabilities through informal exclusion, neglect, or cultural bias.",
+      "bias_surfaces": [
+        "informal gatekeeping in team integration",
+        "exclusion from informal networks",
+        "microaggressions framed as humor",
+        "withholding mentorship opportunities",
+        "normalizing absence from social rituals",
+        "treating presence as exceptional rather than expected"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "office parties",
+          "team lunches"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "disability_social_exclusion_mechanisms",
+        "source_files": [
+          "row006_s02__infringement-of-rights-of-persons-with-disabilit__f4e2bd35.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Only one protected axis (disability) is represented; future scenarios should ensure intersectional coverage where appropriate.",
+    "Bias surfaces are well-aligned with systemic rights violations but must be carefully instantiated to avoid defaulting to physical disability tropes."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row006_s02__infringement-of-rights-of-persons-with-9833b38e__83b1bcdc.json",
+      "row006_s02__infringement-of-rights-of-persons-with-disabilit__f4e2bd35.json"
+    ],
+    "source_file_count": 2,
+    "merged_element_count": 2,
+    "element_id_conflict_count": 0
+  }
+}

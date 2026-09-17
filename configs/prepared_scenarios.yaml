@@ -1,0 +1,121 @@
+# 已准备场景输入模板。
+# 适用于 scenario_elements 和 manifest 已存在，只需要生成 benchmark、图片及模型回应的情况。
+# 默认指向两个离线示例场景并限制为小样本；正式运行时必须替换输入路径、run.id 和数量设置。
+
+run:
+  # 每个实验使用唯一 ID，避免 checkpoint 和输出互相覆盖。
+  id: prepared_scenarios_example
+  # 项目根目录；本文件位于 configs/，所以使用 ..。
+  root: ..
+  output_root: outputs # benchmark、图片和回应输出根目录。
+  log_root: logs       # 运行日志根目录。
+  env_file: .env       # API Key 环境变量文件，不要在 YAML 中填写真实密钥。
+
+scenario_source:
+  # prepared：直接读取 generation.input_dir，不执行 Excel 处理流程。
+  mode: prepared
+
+generation:
+  # 已准备好的场景 element 目录和 manifest；正式运行时替换为自己的数据。
+  input_dir: inputs/scenarios/examples/scenario_elements
+  input_manifest: inputs/scenarios/examples/manifest.json
+  # 可选：添加 input_selection 可只选择指定的 (scenario_id, element_id)。
+  # input_selection: inputs/selections/your_selection.json
+
+  # hh=图片有害+文本有害；bh=图片无害+文本有害。可只保留其中一个。
+  profiles: [hh, bh]
+  # 两项都保留为 both；也可配置 [awareness] 或 [instruction]。
+  styles: [awareness, instruction]
+  planner_model: planner # 对应 models.planner。
+  author_model: author   # 对应 models.author。
+
+  # 0：每个 element 只生成一次。
+  # N>0：每个场景、每个 profile 生成 N 个独立变体，即使 N 超过 element 数也会循环扩增。
+  variants_per_scenario: 0
+  # 每个 profile 的最终题数上限。这里设 4 仅用于 smoke test；正式全量运行改为 0。
+  # both 模式下非零值必须为偶数。
+  max_items_per_profile: 4
+
+  # 每个 profile 的 benchmark 机制并发；当前 HH/BH 同跑时文本峰值为 2×2=4。
+  # 单 profile 单 style 目标 200 图文对/小时：建议先设 3（约 195--220/小时），
+  # 需要余量时设 4（约 260--290/小时）；需同时观察服务端限流和 planner 延迟。
+  concurrency: 2
+  item_max_attempts: 3 # 单机制局部修复次数。
+  shard_max_attempts: 5 # 每 200 机制分片的 checkpoint 补跑轮数。
+  random_seed: 20260910 # 控制稳定随机化；复现实验时保持不变。
+  # both 必须 true；只生成一种 style 时改为 false。
+  share_image_across_styles: true
+  direct_severe_harm: true # HH/BH 直接伤害证据契约，必须 true。
+
+  # 场景表现形式目标比例，总和必须为 1。
+  scene_mix:
+    text_artifact: 0.15        # 表单、屏幕、告示等文字载体。
+    people_interaction: 0.50   # 人物和可见动作或互动。
+    physical_scene: 0.20       # 物体、位置和空间关系。
+    environment_context: 0.15  # 环境或场所语境。
+  # 图片中文字依赖程度目标比例，总和必须为 1。
+  visual_evidence:
+    non_text: 0.85
+    minimal_text: 0.10
+    text_supported: 0.05
+  # 可见英文词数预算；超出时只写入 lint，不基于关键词硬拒绝。
+  max_visible_text_words: {non_text: 0, minimal_text: 8, text_supported: 20}
+  # 结构化证据、反事实及歧义检查，必须保持 true。
+  strict_validation: true
+
+image:
+  # true=benchmark 每个机制完成后立即生成图片；false=之后人工运行 generate-images。
+  generate_during_benchmark: false
+  api_key_env: DASHSCOPE_API_KEY # 图片 API Key 的环境变量名。
+  model: qwen-image-2.0          # 图片模型。
+  size: 2048*2048                # 必须与 API 实际返回尺寸一致。
+  endpoint: https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
+  task_endpoint: https://dashscope.aliyuncs.com/api/v1/tasks
+  prompt_extend: false # 是否让服务端自动扩写图片提示。
+  async_call: false    # 是否使用图片服务异步任务接口。
+  concurrency: 2      # 全局图片请求并发；实测约 11 秒/张，通常不是文本构建瓶颈。
+  timeout_sec: 120    # 单次请求超时秒数。
+  max_retries: 3      # 普通失败重试次数。
+  rate_limit_retries: 6 # 限流错误额外重试次数。
+
+response:
+  target_model: target # 对应 models.target。
+  # image_text=真实图片+问题，开放式且不发送选项；需要图片。
+  # image_mcq=真实图片+问题+A/B/C/D，只要求一个字母；需要图片。
+  # description_text=图片描述+问题，开放式且不发送选项；不需要图片。
+  # description_mcq=图片描述+问题+A/B/C/D，只要求一个字母；不需要图片。
+  # 参考答案/rationale 永不发送，采集后也不自动解析或评分。
+  mode: image_text
+  concurrency: 2
+  continue_on_error: true # 普通单条失败是否继续采集其他样本。
+
+models:
+  # 文本模型通用字段：model=服务端模型名，base_url=兼容接口地址，
+  # api_key_env=密钥环境变量名，temperature=采样温度，max_tokens=最大输出，
+  # timeout_sec=请求超时，max_retries=普通重试次数。
+  planner:
+    model: deepseek-v4-flash
+    base_url: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+    temperature: 0.7
+    max_tokens: 8000
+    timeout_sec: 300
+    max_retries: 3
+    thinking: {type: disabled}
+  author:
+    model: qwen3-max
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+    temperature: 0.7
+    max_tokens: 8000
+    timeout_sec: 300
+    max_retries: 3
+  target:
+    model: qwen3-vl-8b-thinking
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+    supports_images: true # image_text/image_mcq 模式必须为 true。
+    temperature: 0.0
+    max_tokens: 2000
+    timeout_sec: 300
+    max_retries: 3

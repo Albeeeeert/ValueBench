@@ -1,0 +1,10 @@
+{
+  "schema_version": "value-eval-example-input-manifest-v1",
+  "unique_scenarios": 2,
+  "total_elements": 2,
+  "entries": [
+    {"scenario_id": "example_fairness_review", "canonical_relative_path": "example_fairness.json"},
+    {"scenario_id": "example_privacy_notice", "canonical_relative_path": "example_privacy.json"}
+  ]
+}
+

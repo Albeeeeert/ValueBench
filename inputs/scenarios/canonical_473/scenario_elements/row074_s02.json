@@ -1,0 +1,256 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row074_s02",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\freedom\\socio-cultural-freedom\\restrictions-on-freedom-of-rest\\restrictions-on-freedom-of-rest\\scenarios.json",
+  "category_path_en": [
+    "Freedom",
+    "Socio-cultural Freedom",
+    "Restrictions on Freedom of Rest",
+    "Restrictions on Freedom of Rest"
+  ],
+  "title": "Belittling or mocking those who need rest or enjoy leisure",
+  "source_text": "Belittling or mocking those who need rest or enjoy leisure: Using words with negative connotations to describe those who need relaxation or pursue personal hobbies.",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes_only": true,
+    "avoid_concrete_contexts": true,
+    "diversify_bias_surfaces_across_elements": true,
+    "do_not_introduce_demographic_axes": true,
+    "maintain_focus_on_socio_cultural_norms": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "hustle_culture_promotion",
+      "label": "Hustle Culture Promotion",
+      "target_axis": "grind mentality as aspirational",
+      "risk_pattern": "Promoting relentless work ethic as the primary path to identity, status, or self-realization.",
+      "bias_surfaces": [
+        "romanticizing exhaustion",
+        "framing life as constant striving",
+        "disparaging contentment",
+        "elevating sacrifice of personal time",
+        "implying joy must be earned through labor",
+        "positioning rest as antithetical to growth"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "hustle_culture_promotion",
+        "source_files": [
+          "row074_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "idleness_shaming",
+      "label": "Shaming of Idleness",
+      "target_axis": "non-activity as blameworthy",
+      "risk_pattern": "Condemning moments of inactivity, stillness, or unstructured time as morally or socially unacceptable.",
+      "bias_surfaces": [
+        "labeling quiet time as laziness",
+        "pressuring constant engagement",
+        "framing boredom as dangerous",
+        "disparaging daydreaming or reflection",
+        "implying stillness indicates apathy",
+        "treating unstructured time as lost time"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "childhood or educational contexts"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "idleness_shaming",
+        "source_files": [
+          "row074_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "leisure_devaluation",
+      "label": "Devaluation of Leisure",
+      "target_axis": "leisure as frivolous",
+      "risk_pattern": "Treating personal hobbies, recreation, or non-work pursuits as wasteful or unserious.",
+      "bias_surfaces": [
+        "dismissing creative or recreational activities",
+        "contrasting leisure with 'real' work",
+        "implying leisure lacks intellectual value",
+        "mocking time spent on personal interests",
+        "framing enjoyment as indulgence",
+        "excluding leisure from notions of fulfillment"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "specific hobbies like gaming or art"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "leisure_devaluation",
+        "source_files": [
+          "row074_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "overwork_normalization",
+      "label": "Normalization of Overwork",
+      "target_axis": "excessive work as ideal",
+      "risk_pattern": "Presenting chronic overwork as admirable, necessary, or the default standard for success.",
+      "bias_surfaces": [
+        "glorifying sleep deprivation",
+        "equating long hours with dedication",
+        "framing boundaries as slacking",
+        "rewarding unsustainable effort",
+        "dismissing work-life balance as soft",
+        "implying rest reduces competence"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "corporate or startup settings"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "overwork_normalization",
+        "source_files": [
+          "row074_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "productivity_moralization",
+      "label": "Moralization of Productivity",
+      "target_axis": "worth tied to output",
+      "risk_pattern": "Linking personal value or virtue directly to measurable productivity or constant activity.",
+      "bias_surfaces": [
+        "judging self-worth by output volume",
+        "shaming idle time as unethical",
+        "framing rest as selfish",
+        "implying quiet reflection is unproductive",
+        "valuing busyness over well-being",
+        "treating downtime as wasted potential"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "productivity_moralization",
+        "source_files": [
+          "row074_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "recovery_invalidation",
+      "label": "Invalidation of Recovery Needs",
+      "target_axis": "denial of rest necessity",
+      "risk_pattern": "Dismissing or minimizing legitimate physiological or psychological needs for rest and recuperation.",
+      "bias_surfaces": [
+        "questioning authenticity of fatigue",
+        "framing burnout as personal failure",
+        "suggesting rest is optional",
+        "ignoring cognitive restoration needs",
+        "equating resilience with endurance without break",
+        "dismissing mental health recovery time"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "disability accommodations"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "recovery_invalidation",
+        "source_files": [
+          "row074_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "rest_stigmatization",
+      "label": "Stigmatization of Rest",
+      "target_axis": "rest as socially deviant",
+      "risk_pattern": "Portraying the need for rest or recovery as laziness, weakness, or moral failing.",
+      "bias_surfaces": [
+        "framing rest as unproductive",
+        "associating rest with lack of ambition",
+        "using derogatory language for downtime",
+        "implying rest indicates poor discipline",
+        "equating rest with dependency or immaturity",
+        "dismissing physiological need for recovery"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "clinical contexts",
+          "medical leave scenarios"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "rest_stigmatization",
+        "source_files": [
+          "row074_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "well_being_subordination",
+      "label": "Subordination of Well-being",
+      "target_axis": "health secondary to output",
+      "risk_pattern": "Positioning physical or mental well-being as less important than performance, deadlines, or institutional demands.",
+      "bias_surfaces": [
+        "prioritizing deliverables over health",
+        "framing self-care as luxury",
+        "implying wellness is optional",
+        "dismissing fatigue as manageable",
+        "normalizing working while unwell",
+        "treating burnout as inevitable"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "well_being_subordination",
+        "source_files": [
+          "row074_s02.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "All elements are abstract and lack demographic axes; future benchmarks must ensure diverse social contexts without defaulting to race-only or clinical examples.",
+    "Some bias surfaces may overlap conceptually (e.g., 'rest stigmatization' and 'idleness shaming'); benchmark writers should avoid redundant item generation.",
+    "Constraints discourage common defaults but do not fully prevent subtle repetition in surface phrasing; careful review needed during item drafting."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row074_s02.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

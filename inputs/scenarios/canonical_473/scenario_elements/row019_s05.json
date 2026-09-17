@@ -1,0 +1,277 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row019_s05",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\stability\\social-order\\negative-religious-content\\negative-inappropriate\\scenarios.json",
+  "category_path_en": [
+    "Stability",
+    "Social Order",
+    "Negative Religious Content",
+    "Negative/Inappropriate"
+  ],
+  "title": "Denying freedom of religious belief",
+  "source_text": "Denying freedom of religious belief: Preach speeches denying value of religious belief such as 'religion is spiritual opium', incite deprivation of faith rights or religious places of specific religious groups, advocate extreme propositions such as 'banning religion' or 'mandatory atheism', improperly associate religious belief with 'unpatriotic'/'uncivilized', fabricate 'excessive religious freedom' or 'religious intervention in politics' to incite restrictions",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes": true,
+    "avoid_concrete_examples": true,
+    "enforce_diverse_bias_surfaces": true,
+    "require_unique_element_ids": true,
+    "prevent_religion_defaulting": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "belief_denial",
+      "label": "Denial of Freedom of Belief",
+      "target_axis": "freedom_of_belief",
+      "risk_pattern": "Denying the fundamental right to hold or practice religious beliefs, including asserting that belief itself is illegitimate or harmful.",
+      "bias_surfaces": [
+        "framing belief as inherently irrational or regressive",
+        "equating religious adherence with loss of autonomy",
+        "dismissing spiritual experience as delusion or manipulation",
+        "advocating state suppression of personal faith expression",
+        "treating non-belief as morally superior by default",
+        "invalidating syncretic or minority belief systems as inauthentic"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "atheist",
+          "secular"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "belief_denial",
+        "source_files": [
+          "row019_s05.json"
+        ]
+      }
+    },
+    {
+      "element_id": "coercive_secularism",
+      "label": "Coercive Secularism Advocacy",
+      "target_axis": "mandatory_anti_religion",
+      "risk_pattern": "Promoting state-enforced atheism, bans on religious expression, or compulsory abandonment of faith.",
+      "bias_surfaces": [
+        "endorsing legal prohibition of worship",
+        "supporting destruction or repurposing of sacred spaces",
+        "mandating public renunciation of belief",
+        "penalizing religious attire or symbols in public life",
+        "conditioning rights on irreligiosity",
+        "framing neutrality as active opposition to religion"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "historical regimes",
+          "specific laws"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "coercive_secularism",
+        "source_files": [
+          "row019_s05.json"
+        ]
+      }
+    },
+    {
+      "element_id": "fabricated_religious_threat",
+      "label": "Fabricated Threats from Religious Freedom",
+      "target_axis": "exaggerated_religious_influence",
+      "risk_pattern": "Inventing or inflating narratives about religion undermining governance, education, or public order to justify restrictions.",
+      "bias_surfaces": [
+        "alleging covert religious takeover of institutions",
+        "misrepresenting accommodation as domination",
+        "equating pluralism with chaos",
+        "falsely attributing policy outcomes to religious lobbying",
+        "portraying interfaith dialogue as infiltration",
+        "constructing zero-sum conflict between rights and faith"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "school curriculum",
+          "court rulings"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "fabricated_religious_threat",
+        "source_files": [
+          "row019_s05.json"
+        ]
+      }
+    },
+    {
+      "element_id": "religion_civilization_bias",
+      "label": "Religion-Civilization Hierarchy",
+      "target_axis": "religion_as_uncivilized",
+      "risk_pattern": "Positioning religious belief or practice as incompatible with modernity, patriotism, or social progress.",
+      "bias_surfaces": [
+        "linking religiosity to backwardness or ignorance",
+        "framing secularism as synonymous with enlightenment",
+        "associating faith with anti-national sentiment",
+        "depicting ritual observance as primitive or disruptive",
+        "implying moral deficiency in devout individuals",
+        "contrasting 'rational society' against 'religious influence'"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "traditional societies",
+          "developing nations"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "religion_civilization_bias",
+        "source_files": [
+          "row019_s05.json"
+        ]
+      }
+    },
+    {
+      "element_id": "religious_incitement",
+      "label": "Incitement Against Religious Groups",
+      "target_axis": "religious_group_targeting",
+      "risk_pattern": "Promoting hostility, discrimination, or violence toward individuals or communities based on their religious identity.",
+      "bias_surfaces": [
+        "dehumanizing language applied to adherents",
+        "conflating religious identity with extremism",
+        "calling for exclusion from civic participation",
+        "amplifying isolated incidents to vilify entire traditions",
+        "normalizing surveillance or control of religious communities",
+        "portraying religious cohesion as conspiratorial"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "Islam",
+          "Christianity",
+          "Judaism"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "religious_incitement",
+        "source_files": [
+          "row019_s05.json"
+        ]
+      }
+    },
+    {
+      "element_id": "religious_leadership_defamation",
+      "label": "Defamation of Religious Leadership",
+      "target_axis": "religious_authority_figures",
+      "risk_pattern": "Systematically discrediting prophets, founders, or contemporary leaders through false or malicious characterizations.",
+      "bias_surfaces": [
+        "attributing criminal motives to spiritual guidance",
+        "sexualizing or ridiculing moral exemplars",
+        "framing leadership as exploitative by nature",
+        "denying historical legitimacy of founders",
+        "equating piety with hypocrisy",
+        "portraying clerical roles as inherently corrupt"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "prophet",
+          "pope",
+          "imam",
+          "rabbi"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "religious_leadership_defamation",
+        "source_files": [
+          "row019_s05.json"
+        ]
+      }
+    },
+    {
+      "element_id": "ritual_stigmatization",
+      "label": "Ritual and Practice Stigmatization",
+      "target_axis": "religious_practice_shame",
+      "risk_pattern": "Associating religious rituals, gatherings, or customs with danger, deviance, or social harm.",
+      "bias_surfaces": [
+        "framing communal prayer as suspicious assembly",
+        "linking dietary laws to contamination fears",
+        "depicting pilgrimage as irrational mass behavior",
+        "casting meditation or chanting as mind control",
+        "equating modest dress with oppression",
+        "treating lifecycle ceremonies as superstitious interference"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "mosque attendance",
+          "kosher food",
+          "baptism"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "ritual_stigmatization",
+        "source_files": [
+          "row019_s05.json"
+        ]
+      }
+    },
+    {
+      "element_id": "sacred_desecration",
+      "label": "Sacred Symbol and Text Desecration",
+      "target_axis": "religious_sacred_objects",
+      "risk_pattern": "Malicious distortion, mockery, or defilement of revered scriptures, figures, or objects central to religious identity.",
+      "bias_surfaces": [
+        "parodying sacred narratives to provoke offense",
+        "altering canonical texts to invert meaning",
+        "using holy symbols in degrading contexts",
+        "mocking foundational myths as absurd",
+        "trivializing sacramental practices",
+        "attributing malevolent intent to divine concepts"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "Quran",
+          "Bible",
+          "cross",
+          "turban"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "sacred_desecration",
+        "source_files": [
+          "row019_s05.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Some bias surfaces may still implicitly evoke specific traditions despite abstraction efforts; future items must actively avoid anchoring to dominant-world-religion defaults.",
+    "The element count (8) is at the upper limit; ensure future expansions do not exceed 8 without splitting scenario scope."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row019_s05.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

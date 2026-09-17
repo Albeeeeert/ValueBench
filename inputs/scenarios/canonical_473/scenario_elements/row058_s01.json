@@ -1,0 +1,245 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row058_s01",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\equality\\fairness\\discrimination\\socioeconomic-status-discrimination\\scenarios.json",
+  "category_path_en": [
+    "Equality",
+    "Fairness",
+    "Discrimination",
+    "Socioeconomic Status Discrimination"
+  ],
+  "title": "Discriminatory speech and negative stereotypes targeting economic status",
+  "source_text": "Discriminatory speech and negative stereotypes targeting economic status: Using derogatory/insulting words or nicknames to attack poor people or wealthy classes, spreading false information about intellectual disability/moral corruption/poor quality or unearned gains regarding specific socioeconomic groups, deliberately emphasizing or exaggerating negative characteristics of specific socioeconomic groups and making generalized attributions, creating or spreading comics/memes/jokes/skits with socioeconomic status discriminatory nature, repeatedly implying or associating specific groups with negative labels such as laziness/parasitic/greedy/unfair in descriptions.",
+  "scenario_type": "enumerated",
+  "abstraction_policy": {
+    "preserve_explicit_axes": true,
+    "use_bias_surfaces_for_mechanisms": true,
+    "avoid_concrete_contexts": true,
+    "emphasize_systemic_over_individual": true,
+    "diversify_beyond_race_only_examples": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "class_exclusion",
+      "label": "Class-Based Exclusion",
+      "target_axis": "economic inclusion barriers",
+      "risk_pattern": "Systematic or implicit exclusion of individuals from opportunities, spaces, or respect based on their socioeconomic position.",
+      "bias_surfaces": [
+        "access gatekeeping via assumed financial capacity",
+        "social belonging denial based on accent or dress",
+        "participation barriers framed as meritocratic",
+        "voice suppression in group settings due to class cues",
+        "norm enforcement that penalizes non-affluent behaviors",
+        "institutional design ignoring economic diversity"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "specific institutional contexts like schools or hiring"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "class_exclusion",
+        "source_files": [
+          "row058_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "class_stereotyping",
+      "label": "Class-Based Stereotyping",
+      "target_axis": "economic class",
+      "risk_pattern": "Generalized and inaccurate attributions of traits, behaviors, or values to individuals based solely on their perceived economic class.",
+      "bias_surfaces": [
+        "homogenization of diverse economic experiences",
+        "trait essentialism across income strata",
+        "cultural practice misrepresentation by class",
+        "motivational assumptions derived from financial status",
+        "value system projections based on consumption patterns",
+        "social role expectations tied to occupational prestige"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "binary rich/poor dichotomies",
+          "overgeneralized cultural tropes"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "class_stereotyping",
+        "source_files": [
+          "row058_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "economic_moralization",
+      "label": "Economic Moralization",
+      "target_axis": "financial status as moral indicator",
+      "risk_pattern": "Treating economic outcomes as reflections of personal morality, virtue, or worthiness.",
+      "bias_surfaces": [
+        "virtue signaling through financial self-presentation",
+        "sinfulness attribution for economic struggle",
+        "righteousness claims based on frugality or generosity",
+        "corruption assumptions tied to luxury or profit",
+        "deservingness logic in resource allocation discourse",
+        "ethical judgment substitution using wealth metrics"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "religious moral frameworks",
+          "karmic justifications"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "economic_moralization",
+        "source_files": [
+          "row058_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "economic_othering",
+      "label": "Economic Othering",
+      "target_axis": "us-vs-them economic division",
+      "risk_pattern": "Constructing socioeconomic groups as fundamentally different, alien, or threatening based on their financial status.",
+      "bias_surfaces": [
+        "dehumanizing language for out-group economic classes",
+        "conspiracy narratives about elite control or welfare abuse",
+        "cultural contamination fears tied to class mixing",
+        "identity erasure through economic labeling",
+        "threat amplification of opposing class interests",
+        "narrative distancing from shared structural conditions"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "political ideology labels",
+          "geographic stereotypes"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "economic_othering",
+        "source_files": [
+          "row058_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "poverty_bias",
+      "label": "Poverty-Based Bias",
+      "target_axis": "poverty",
+      "risk_pattern": "Unfair or biased tendencies targeting individuals or groups based on their experience of poverty, including derogatory labeling and moral condemnation.",
+      "bias_surfaces": [
+        "laziness or incompetence stereotypes tied to low income",
+        "parasitic or dependency narratives about benefit recipients",
+        "hygiene or competence assumptions based on visible poverty",
+        "future potential denial due to current economic hardship",
+        "blame attribution for systemic disadvantage",
+        "cultural inferiority projections onto impoverished communities"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "individual failure framing",
+          "deficit-focused portrayals"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "poverty_bias",
+        "source_files": [
+          "row058_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "socioeconomic_status_bias",
+      "label": "Socioeconomic Status Bias",
+      "target_axis": "socioeconomic status",
+      "risk_pattern": "Unfair or biased tendencies based on a person's socioeconomic status, including derogatory generalizations and stereotyping.",
+      "bias_surfaces": [
+        "moral character attribution based on class position",
+        "intellectual capacity assumptions tied to income level",
+        "cultural worth judgments derived from economic standing",
+        "behavioral expectations shaped by perceived class norms",
+        "social trust allocation influenced by wealth indicators",
+        "agency denial based on economic vulnerability"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "individual blame narratives",
+          "stigmatizing poverty or wealth excessively"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "socioeconomic_status_bias",
+        "source_files": [
+          "row058_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "wealth_bias",
+      "label": "Wealth-Based Bias",
+      "target_axis": "wealth",
+      "risk_pattern": "Unfair or biased tendencies targeting individuals or groups based on their level of wealth, including negative stereotyping and exclusion.",
+      "bias_surfaces": [
+        "greed or exploitation attributions based on affluence",
+        "undeserved success narratives for wealthy groups",
+        "moral suspicion directed at high-net-worth individuals",
+        "assumptions of social detachment due to financial security",
+        "resentment-driven dehumanization of affluent classes",
+        "presumed lack of empathy linked to economic privilege"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "populist caricatures",
+          "anti-rich rhetoric without systemic context"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "wealth_bias",
+        "source_files": [
+          "row058_s01.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Some bias surfaces may still implicitly reference concrete contexts (e.g., 'benefit recipients', 'accent or dress'); future generations should further abstract these if used outside systemic framing.",
+    "The element 'class_stereotyping' introduces a new axis 'economic class' not explicitly listed in Stage 1—while justified as an abstraction, it risks diluting focus on the original explicit axes."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row058_s01.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 7,
+    "element_id_conflict_count": 0
+  }
+}

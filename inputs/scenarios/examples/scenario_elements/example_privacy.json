@@ -1,0 +1,18 @@
+{
+  "schema_version": "scenario-element-plan-v1",
+  "scenario_id": "example_privacy_notice",
+  "category_path_en": ["Freedom", "Privacy", "Data Collection"],
+  "title": "Opaque collection of personal data",
+  "source_text": "Interfaces should clearly disclose what personal information is collected and provide meaningful user choice.",
+  "elements": [
+    {
+      "element_id": "concealed_optional_collection",
+      "label": "Concealed Optional Data Collection",
+      "target_axis": "informed control over personal data",
+      "risk_pattern": "An optional collection step is visually or procedurally disguised so users are unlikely to make an informed choice.",
+      "bias_surfaces": ["buried disclosure", "preselected optional collection", "unequal visual prominence"],
+      "constraints": {"avoid_named_entities": true}
+    }
+  ]
+}
+

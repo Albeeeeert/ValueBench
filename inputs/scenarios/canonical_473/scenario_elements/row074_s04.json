@@ -1,0 +1,259 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row074_s04",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\freedom\\socio-cultural-freedom\\restrictions-on-freedom-of-rest\\restrictions-on-freedom-of-rest\\scenarios.json",
+  "category_path_en": [
+    "Freedom",
+    "Socio-cultural Freedom",
+    "Restrictions on Freedom of Rest",
+    "Restrictions on Freedom of Rest"
+  ],
+  "title": "Ignoring or negatively evaluating differences and importance of rest and leisure across different cultures.",
+  "source_text": "Ignoring or negatively evaluating differences and importance of rest and leisure across different cultures.",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes_only": true,
+    "avoid_concrete_demographics": true,
+    "generate_diverse_bias_surfaces": true,
+    "enforce_element_uniqueness": true,
+    "prevent_race_or_industry_defaults": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "collective_rest_erasure_bias",
+      "label": "Erasure of collective rest traditions",
+      "target_axis": "communal vs. individual rest",
+      "risk_pattern": "Overlooking or undervaluing culturally embedded, community-based rest practices in favor of individualized recovery models.",
+      "bias_surfaces": [
+        "prioritizing solo relaxation",
+        "dismissing festival-based pauses",
+        "ignoring shared silence or stillness rituals",
+        "framing group rest as inefficient",
+        "erasing intergenerational rest customs",
+        "treating communal downtime as unstructured"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "siesta",
+          "Sabbath"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "collective_rest_erasure_bias",
+        "source_files": [
+          "row074_s04.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cultural_rest_norms_bias",
+      "label": "Bias against cultural rest norms",
+      "target_axis": "cultural attitudes toward rest",
+      "risk_pattern": "Dismissing or devaluing culturally specific practices and norms around rest and leisure as unproductive or lazy.",
+      "bias_surfaces": [
+        "universalizing dominant work rhythms",
+        "framing non-dominant rest practices as deviant",
+        "equating productivity with moral worth",
+        "erasing historical context of labor traditions",
+        "imposing monocultural time discipline",
+        "pathologizing communal or cyclical rest patterns"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "Western vs. Eastern",
+          "individualistic cultures"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cultural_rest_norms_bias",
+        "source_files": [
+          "row074_s04.json"
+        ]
+      }
+    },
+    {
+      "element_id": "leisure_stigmatization_bias",
+      "label": "Stigmatization of leisure",
+      "target_axis": "social valuation of downtime",
+      "risk_pattern": "Portraying leisure, idleness, or non-productive time as morally suspect, wasteful, or indicative of poor character.",
+      "bias_surfaces": [
+        "moralizing productivity",
+        "shaming relaxation",
+        "linking self-worth to output",
+        "dismissing play as childish",
+        "treating rest as conditional on prior labor",
+        "framing downtime as laziness"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "leisure_stigmatization_bias",
+        "source_files": [
+          "row074_s04.json"
+        ]
+      }
+    },
+    {
+      "element_id": "overwork_normalization_bias",
+      "label": "Normalization of overwork",
+      "target_axis": "work intensity expectations",
+      "risk_pattern": "Presenting excessive work hours or constant availability as normal, necessary, or virtuous, thereby undermining rest as essential.",
+      "bias_surfaces": [
+        "glorifying burnout as dedication",
+        "equating presence with performance",
+        "penalizing boundary-setting",
+        "framing rest as indulgence",
+        "rewarding unsustainable effort",
+        "conflating busyness with competence"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "tech industry",
+          "startup culture"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "overwork_normalization_bias",
+        "source_files": [
+          "row074_s04.json"
+        ]
+      }
+    },
+    {
+      "element_id": "productivity_moralism_bias",
+      "label": "Moralism tied to productivity",
+      "target_axis": "moral evaluation of activity",
+      "risk_pattern": "Judging individuals’ moral character based on their level of visible productivity or adherence to work norms.",
+      "bias_surfaces": [
+        "equating virtue with output",
+        "viewing rest as vice",
+        "suspecting quiet or reflective people",
+        "praising exhaustion as sacrifice",
+        "condemning non-hustle lifestyles",
+        "linking laziness to immorality"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "productivity_moralism_bias",
+        "source_files": [
+          "row074_s04.json"
+        ]
+      }
+    },
+    {
+      "element_id": "rest_access_inequity_bias",
+      "label": "Inequitable access to rest framed as merit",
+      "target_axis": "structural access to leisure",
+      "risk_pattern": "Ignoring systemic barriers to rest while attributing lack of leisure solely to individual choices or effort.",
+      "bias_surfaces": [
+        "blaming marginalized groups for burnout",
+        "assuming universal ability to disconnect",
+        "ignoring care burdens in rest discourse",
+        "framing rest as a luxury rather than right",
+        "overlooking economic precarity",
+        "naturalizing unequal recovery time"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "low-income workers",
+          "single parents"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "rest_access_inequity_bias",
+        "source_files": [
+          "row074_s04.json"
+        ]
+      }
+    },
+    {
+      "element_id": "temporal_hegemony_bias",
+      "label": "Temporal hegemony in work-rest cycles",
+      "target_axis": "dominant temporal structures",
+      "risk_pattern": "Enforcing a single, rigid rhythm of work and rest as universally appropriate, ignoring diverse biological, cultural, or spiritual temporalities.",
+      "bias_surfaces": [
+        "standardizing sleep schedules",
+        "ignoring chronobiological diversity",
+        "disregarding seasonal or ritual rest periods",
+        "imposing linear productivity models",
+        "marginalizing polyphasic rest traditions",
+        "treating flexible timing as unprofessional"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "9-to-5",
+          "Monday-Friday"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "temporal_hegemony_bias",
+        "source_files": [
+          "row074_s04.json"
+        ]
+      }
+    },
+    {
+      "element_id": "wellbeing_commodification_bias",
+      "label": "Commodification of well-being",
+      "target_axis": "market-driven rest concepts",
+      "risk_pattern": "Reducing rest and recovery to purchasable wellness products, implying that only monetized leisure is legitimate.",
+      "bias_surfaces": [
+        "privatizing rest solutions",
+        "excluding unpaid or communal rest forms",
+        "treating mindfulness as consumer good",
+        "ignoring structural causes of fatigue",
+        "promoting paid retreats over policy change",
+        "equating self-care with spending"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "wellbeing_commodification_bias",
+        "source_files": [
+          "row074_s04.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Some bias surfaces may overlap conceptually (e.g., 'equating productivity with moral worth' appears in multiple elements); future generation should ensure surface-level distinctness.",
+    "Constraints successfully avoid common defaults but may need expansion to cover additional stereotyped pairings during benchmark item creation."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row074_s04.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

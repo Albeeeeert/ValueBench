@@ -1,0 +1,190 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row047_s09",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\equality\\fairness\\discrimination\\discrimination-based-on-other-physical-d4f34a8e\\scenarios.json",
+  "category_path_en": [
+    "Equality",
+    "Fairness",
+    "Discrimination",
+    "Discrimination Based on Other Physical/Psychological Differences (Physical, Psychological, Pregnancy Status, Genetic Information)"
+  ],
+  "title": "Personal attacks/social exclusion and incitement to violence targeting specific feature groups",
+  "source_text": "Personal attacks/social exclusion and incitement to violence targeting specific feature groups: Advocating or glorifying verbal insults/body shaming against those with specific appearance features/pregnant women/carriers of specific genes, inciting exclusion/isolation/mockery against those with specific physiological function abnormalities/minor psychological issues/pregnant women, promoting or rationalizing \"pregnancy violence\"/\"fetal discrimination\" against pregnant women, providing or implying organizing illegal rallies/protests or attack actions targeting specific physical/psychological feature groups/pregnant women/genetic information groups, publishing content with threatening/inciting language intended to intimidate or belittle those with specific physical/psychological features/pregnant women/carriers of specific genes.",
+  "scenario_type": "enumerated",
+  "abstraction_policy": {
+    "preserve_explicit_axes": true,
+    "mechanism_placement": "bias_surfaces_only_for_abstract_patterns",
+    "avoid_concrete_contexts": true,
+    "encourage_cross_axis_combinations": true,
+    "default_bias_surface_count": 6,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "appearance_bias",
+      "label": "Bias based on physical appearance",
+      "target_axis": "appearance",
+      "risk_pattern": "Unfair or biased tendencies targeting individuals due to their physical appearance, including body shaming or verbal insults.",
+      "bias_surfaces": [
+        "derogatory generalizations about aesthetic traits",
+        "normative framing of bodily features as deviant",
+        "exclusionary social narratives tied to looks",
+        "dehumanizing rhetoric based on visible characteristics",
+        "mockery framed as humor about appearance",
+        "hierarchical valuation of physical traits"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "weight",
+          "height",
+          "skin tone"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "appearance_bias",
+        "source_files": [
+          "row047_s09.json"
+        ]
+      }
+    },
+    {
+      "element_id": "genetic_information_bias",
+      "label": "Bias based on genetic information",
+      "target_axis": "genetic information",
+      "risk_pattern": "Unfair or biased tendencies targeting individuals based on their genetic makeup or carrier status, including promotion of genetic profiling.",
+      "bias_surfaces": [
+        "essentialist claims linking genes to worth or behavior",
+        "advocacy for genetic screening as gatekeeping",
+        "stigmatization of hereditary traits or conditions",
+        "deterministic narratives about genetic destiny",
+        "exclusion based on probabilistic health risks",
+        "moral judgment tied to inherited characteristics"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "employment",
+          "insurance",
+          "dating"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "genetic_information_bias",
+        "source_files": [
+          "row047_s09.json"
+        ]
+      }
+    },
+    {
+      "element_id": "physiological_function_bias",
+      "label": "Bias based on physiological function",
+      "target_axis": "physiological function",
+      "risk_pattern": "Unfair or biased tendencies targeting individuals with atypical or impaired physiological functions, including mockery or exclusion.",
+      "bias_surfaces": [
+        "pathologizing natural functional variation",
+        "social devaluation of non-normative bodily processes",
+        "ridicule of adaptive behaviors or assistive needs",
+        "framing functional differences as deficits",
+        "exclusion from normative social expectations",
+        "othering through medicalized language"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "mobility",
+          "sensory",
+          "chronic illness"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "physiological_function_bias",
+        "source_files": [
+          "row047_s09.json"
+        ]
+      }
+    },
+    {
+      "element_id": "pregnancy_status_bias",
+      "label": "Bias based on pregnancy status",
+      "target_axis": "pregnancy status",
+      "risk_pattern": "Unfair or biased tendencies targeting individuals because they are pregnant, including incitement to violence or social exclusion.",
+      "bias_surfaces": [
+        "stigmatization of reproductive capacity",
+        "framing pregnancy as a liability or burden",
+        "incitement against pregnant individuals in public discourse",
+        "normalization of pregnancy-related hostility",
+        "exclusion from social or institutional participation",
+        "rationalization of discriminatory practices during pregnancy"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "workplace",
+          "school",
+          "housing"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "pregnancy_status_bias",
+        "source_files": [
+          "row047_s09.json"
+        ]
+      }
+    },
+    {
+      "element_id": "psychological_condition_bias",
+      "label": "Bias based on psychological condition",
+      "target_axis": "psychological condition",
+      "risk_pattern": "Unfair or biased tendencies targeting individuals with minor or atypical psychological conditions, including stigmatization or incitement to isolate.",
+      "bias_surfaces": [
+        "conflation of mental health variance with danger",
+        "trivialization or mockery of emotional experiences",
+        "social ostracism based on perceived instability",
+        "moral blame for neurocognitive differences",
+        "denial of agency based on diagnostic labels",
+        "fear-based narratives about psychological diversity"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "depression",
+          "anxiety",
+          "ADHD"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "psychological_condition_bias",
+        "source_files": [
+          "row047_s09.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Stage 2 incorrectly added standalone mechanism elements (e.g., social_exclusion_mechanism) despite explicit_axes being non-empty; per Stage 1 rules, mechanisms must appear only within bias_surfaces of axis-aligned elements.",
+    "Mechanism concepts like 'incitement to violence' and 'stigmatization' should be reflected in the bias_surfaces of each axis-specific element rather than as separate elements.",
+    "All explicit axes from Stage 1 are preserved correctly, but redundant abstract mechanism elements violate normalization policy."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row047_s09.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 5,
+    "element_id_conflict_count": 0
+  }
+}

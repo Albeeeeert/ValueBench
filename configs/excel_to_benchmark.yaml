@@ -1,0 +1,176 @@
+# Excel 到 benchmark 的完整流水线模板。
+# 流程：中文价值观 Excel -> taxonomy/场景/elements -> HH/BH benchmark -> 图片 -> 原始回应。
+# 使用前至少要修改 xlsx、run.id、variants_per_scenario 或 max_items_per_profile，并检查模型别名。
+
+run:
+  # 每次实验使用唯一 ID；输出写入 outputs/<id>。
+  id: excel_to_benchmark_example
+  # 本文件位于 configs/，.. 表示 Value_eval 项目根目录。
+  root: ..
+  output_root: outputs # benchmark、图片和回应输出根目录。
+  log_root: logs       # 日志根目录。
+  env_file: .env       # API Key 环境变量文件，不要把真实密钥写进 YAML。
+
+scenario_source:
+  # excel：先从工作簿构建场景，再把本次 run 的场景交给 benchmark 阶段。
+  mode: excel
+  # 输入工作簿和工作表名称；正式运行时替换为自己的文件。
+  xlsx: inputs/excel/value.xlsx
+  sheet_name: "价值观目录及评判标准"
+  # level1=按一级分类分块；fixed_rows=按 chunk_size 固定行数分块。
+  chunk_by: level1
+  chunk_size: 12 # taxonomy 单次请求最多处理的行数。
+  # 每个场景至少构建多少个 element；variants_per_scenario>0 时不限制最终变体数量。
+  min_elements: 8
+  concurrency: 4 # 不同场景的 element 构建并发数。
+  # true：场景模型普通失败时生成需人工复核的本地降级结果。
+  fallback_on_llm_error: true
+  # true：保存 taxonomy 请求、原始回应和解析结果，便于审计但占用更多空间。
+  debug_save_llm_io: true
+
+  # 以下别名必须在 models 中存在，分别承担翻译、taxonomy、场景分类和 element 编写。
+  translation_model: translator
+  taxonomy_model: taxonomy
+  stage1_model: scenario_classifier
+  element_model: element_author
+
+generation:
+  # Excel 模式会自动读取本次 run 发布的 scenario_elements；以下两个路径只作为配置占位和
+  # 场景尚未生成前的结构默认值，不会覆盖本次 Excel 运行产物。
+  input_dir: inputs/scenarios/examples/scenario_elements
+  input_manifest: inputs/scenarios/examples/manifest.json
+
+  # hh=图片有害+文本有害；bh=图片无害+文本有害。可只保留其中一个。
+  profiles: [hh, bh]
+  # 两项都保留为 both；也可配置 [awareness] 或 [instruction]。
+  styles: [awareness, instruction]
+  planner_model: planner # benchmark planner，对应 models.planner。
+  author_model: author   # benchmark 单 author，对应 models.author。
+
+  # 0：每个场景生成其全部 element，各 element 一次。
+  # N>0：每个场景、每个 profile 固定生成 N 个独立变体，可超过 element 数。
+  variants_per_scenario: 0
+  # 每个 profile 的最终题数上限。这里的 4 只用于小样本；正式运行应改为 0。
+  # both 模式下非零值必须为偶数。
+  max_items_per_profile: 4
+
+  # 每个 profile 的 benchmark 机制并发；当前 HH/BH 同跑时文本峰值为 2×2=4。
+  # 单 profile 单 style 目标 200 图文对/小时：建议先设 3（约 195--220/小时），
+  # 需要余量时设 4（约 260--290/小时）；需同时观察服务端限流和 planner 延迟。
+  concurrency: 2
+  item_max_attempts: 3  # 单机制结构修复次数。
+  shard_max_attempts: 5 # 每 200 机制分片的 checkpoint 补跑轮数。
+  random_seed: 20260910 # 稳定随机种子；复现实验时不要修改。
+  # both 必须 true；单独 awareness 或 instruction 时改为 false。
+  share_image_across_styles: true
+  direct_severe_harm: true # HH/BH 正式直接伤害证据契约，必须 true。
+
+  # 场景表现形式比例，总和必须为 1。
+  scene_mix:
+    text_artifact: 0.15        # 表单、屏幕、告示等文字载体。
+    people_interaction: 0.50   # 人物动作和互动。
+    physical_scene: 0.20       # 物体及空间关系。
+    environment_context: 0.15  # 场所或环境语境。
+  # 图片中文字依赖程度比例，总和必须为 1。
+  visual_evidence:
+    non_text: 0.85
+    minimal_text: 0.10
+    text_supported: 0.05
+  # 可见英文词数预算；关键词扫描只记录 lint，不硬拒绝。
+  max_visible_text_words: {non_text: 0, minimal_text: 8, text_supported: 20}
+  strict_validation: true # 结构化证据、反事实和歧义检查，必须 true。
+
+image:
+  # true=benchmark 每个机制落盘后立即生成图；false=之后人工 generate-images。
+  generate_during_benchmark: false
+  api_key_env: DASHSCOPE_API_KEY # 图片 API Key 环境变量名。
+  model: qwen-image-2.0
+  size: 2048*2048
+  endpoint: https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
+  task_endpoint: https://dashscope.aliyuncs.com/api/v1/tasks
+  prompt_extend: false # 是否启用服务端图片提示扩写。
+  async_call: false    # 是否使用异步任务接口。
+  concurrency: 2      # 全局图片并发；实测约 11 秒/张，通常不是文本构建瓶颈。
+  timeout_sec: 120
+  max_retries: 3
+  rate_limit_retries: 6
+
+response:
+  target_model: target # 要采集原始回答的模型别名。
+  # image_text=真实图片+问题，开放式且不发送选项；需要图片。
+  # image_mcq=真实图片+问题+A/B/C/D，只要求一个字母；需要图片。
+  # description_text=图片描述+问题，开放式且不发送选项；不需要图片。
+  # description_mcq=图片描述+问题+A/B/C/D，只要求一个字母；不需要图片。
+  # 参考答案/rationale 永不发送，采集后也不自动解析或评分。
+  mode: image_text
+  concurrency: 2
+  continue_on_error: true # 普通单条失败是否继续。
+
+models:
+  # translator：将中文 taxonomy 行翻译为英文结构。
+  translator:
+    model: deepseek-flash
+    base_url: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+    temperature: 0.1
+    max_tokens: 12000
+    timeout_sec: 180
+    max_retries: 3
+    thinking: {type: disabled}
+  # taxonomy：抽取价值范式、风险域、评判边界等元数据。
+  taxonomy:
+    model: qwen3.5-35b-a3b
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+    temperature: 0.2
+    max_tokens: 12000
+    timeout_sec: 180
+    max_retries: 3
+  # scenario_classifier：执行场景 Stage 1 分类。
+  scenario_classifier:
+    model: deepseek-flash
+    base_url: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+    temperature: 0.1
+    max_tokens: 2000
+    timeout_sec: 120
+    max_retries: 3
+    thinking: {type: disabled}
+  # element_author：执行 elements 扩展和最终规范化审查。
+  element_author:
+    model: qwen3-max
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+    temperature: 0.4
+    max_tokens: 8000
+    timeout_sec: 640
+    max_retries: 3
+  # planner：为 HH/BH benchmark 生成结构化蓝图。
+  planner:
+    model: deepseek-v4-flash
+    base_url: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+    temperature: 0.7
+    max_tokens: 8000
+    timeout_sec: 300
+    max_retries: 3
+    thinking: {type: disabled}
+  # author：根据蓝图生成 benchmark 内容。
+  author:
+    model: qwen3-max
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+    temperature: 0.7
+    max_tokens: 8000
+    timeout_sec: 300
+    max_retries: 3
+  # target：最终采集回答的模型；图片模式必须 supports_images: true。
+  target:
+    model: qwen3-vl-8b-thinking
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+    supports_images: true
+    temperature: 0.0
+    max_tokens: 2000
+    timeout_sec: 300
+    max_retries: 3

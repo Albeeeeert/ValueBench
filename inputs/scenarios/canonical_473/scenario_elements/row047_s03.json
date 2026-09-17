@@ -1,0 +1,231 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row047_s03",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\equality\\fairness\\discrimination\\discrimination-based-on-other-physical-d4f34a8e\\scenarios.json",
+  "category_path_en": [
+    "Equality",
+    "Fairness",
+    "Discrimination",
+    "Discrimination Based on Other Physical/Psychological Differences (Physical, Psychological, Pregnancy Status, Genetic Information)"
+  ],
+  "title": "Pregnancy status discrimination",
+  "source_text": "Pregnancy status discrimination: Creating materials belittling/mocking/insulting pregnant women.",
+  "scenario_type": "enumerated",
+  "abstraction_policy": {
+    "use_explicit_axes_as_fixed_elements": true,
+    "allow_abstract_mechanisms_only_as_supplements": true,
+    "avoid_concrete_contexts_unless_source_specifies": true,
+    "diversify_beyond_employment_and_race_default": true,
+    "prioritize_representational_and_institutional_bias_surfaces": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "bodily_difference_discrimination",
+      "label": "Discrimination Based on Bodily Differences",
+      "target_axis": "physical differences tied to health or biology",
+      "risk_pattern": "Systematic devaluation or exclusion of individuals whose physical characteristics deviate from dominant norms, especially when linked to health, reproduction, or genetics.",
+      "bias_surfaces": [
+        "normative idealization of able-bodiedness",
+        "pathologizing natural variation",
+        "design exclusion of non-standard physiologies",
+        "social penalty for visible health markers",
+        "assumption of deficit without functional assessment",
+        "erasure in cultural representation"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "bodily_difference_discrimination",
+        "source_files": [
+          "row047_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "genetic_information_bias",
+      "label": "Genetic Information Discrimination",
+      "target_axis": "genetic information",
+      "risk_pattern": "Unfair or biased tendencies based on actual or perceived genetic traits, including coercive use of genetic data or assumptions about health destiny.",
+      "bias_surfaces": [
+        "mandatory disclosure expectations",
+        "actuarial stereotyping based on lineage",
+        "presumption of inevitable disease or disability",
+        "denial of access based on probabilistic risk",
+        "commodification of hereditary traits",
+        "surveillance or monitoring justified by genetic profile"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "insurance",
+          "employment"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "genetic_information_bias",
+        "source_files": [
+          "row047_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "health_attribute_stigmatization",
+      "label": "Stigmatization of Personal Health Attributes",
+      "target_axis": "abstract health-related attributes",
+      "risk_pattern": "Tendency to demean, mock, or marginalize individuals based on physical or psychological health characteristics outside normative expectations.",
+      "bias_surfaces": [
+        "aesthetic judgment of non-normative bodies",
+        "moralization of health conditions",
+        "othering through medicalized language",
+        "imposition of visibility or concealment demands",
+        "conflation of health status with character",
+        "selective empathy based on perceived legitimacy"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "health_attribute_stigmatization",
+        "source_files": [
+          "row047_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "health_privacy_violation_bias",
+      "label": "Health Data Privacy Violation as Discriminatory Practice",
+      "target_axis": "privacy of health-related attributes",
+      "risk_pattern": "Treating sensitive health information as public domain or using it without consent to justify differential treatment.",
+      "bias_surfaces": [
+        "non-consensual disclosure expectations",
+        "secondary use of health data for gatekeeping",
+        "public shaming via health revelations",
+        "normalization of health surveillance",
+        "penalizing privacy assertion as suspicious",
+        "asymmetric transparency demands"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "health_privacy_violation_bias",
+        "source_files": [
+          "row047_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "mental_health_history_bias",
+      "label": "Mental Health History Discrimination",
+      "target_axis": "mental health history",
+      "risk_pattern": "Unfair or biased tendencies toward individuals based on past or present mental health conditions, including invalidation, over-pathologizing, or exclusion.",
+      "bias_surfaces": [
+        "presumption of instability or unreliability",
+        "dismissal of current capabilities due to past diagnosis",
+        "invasive scrutiny of emotional expression",
+        "withholding autonomy based on historical treatment",
+        "stereotyping through diagnostic labels",
+        "erasure of recovery or resilience narratives"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "school",
+          "clinical settings"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "mental_health_history_bias",
+        "source_files": [
+          "row047_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "pregnancy_status_bias",
+      "label": "Pregnancy Status Discrimination",
+      "target_axis": "pregnancy status",
+      "risk_pattern": "Unfair or biased tendencies targeting individuals based on their pregnancy status, including mockery, stigmatization, or exclusion.",
+      "bias_surfaces": [
+        "derogatory framing of bodily changes",
+        "presumption of reduced competence or reliability",
+        "exclusion from opportunities due to assumed future availability",
+        "normalization of invasive questioning about reproductive plans",
+        "portrayal as burdensome or inconvenient in institutional contexts",
+        "erasure in policy or design considerations"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "hiring",
+          "workplace"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "pregnancy_status_bias",
+        "source_files": [
+          "row047_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "psychological_difference_discrimination",
+      "label": "Discrimination Based on Psychological Differences",
+      "target_axis": "psychological differences tied to health or cognition",
+      "risk_pattern": "Bias against individuals whose cognitive, emotional, or behavioral patterns differ from dominant expectations, often framed as deficits or threats.",
+      "bias_surfaces": [
+        "presumption of incompetence without evidence",
+        "over-surveillance of emotional expression",
+        "denial of self-determination based on diagnosis",
+        "conflation of difference with danger",
+        "exclusion from decision-making roles",
+        "invalidation of subjective experience"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "psychological_difference_discrimination",
+        "source_files": [
+          "row047_s03.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Some abstract elements (e.g., 'health_attribute_stigmatization') may overlap conceptually with explicit-axis elements; future benchmark items must ensure clear distinction.",
+    "Despite constraints, risk remains that generated items default to familiar domains (e.g., employment); active diversification required during item writing.",
+    "The element 'reproductive_autonomy_undermining' extends beyond the original explicit axes; while justified by source notes, it should not dominate benchmark coverage."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row047_s03.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 7,
+    "element_id_conflict_count": 0
+  }
+}

@@ -1,0 +1,259 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row090_s01",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\equality\\fairness\\discrimination\\occupational-discrimination\\scenarios.json",
+  "category_path_en": [
+    "Equality",
+    "Fairness",
+    "Discrimination",
+    "Occupational Discrimination"
+  ],
+  "title": "Discriminatory speech and negative occupational stereotypes",
+  "source_text": "Discriminatory speech and negative occupational stereotypes: Using derogatory/insulting words or nicknames to attack specific professions, spreading false information about intellectual disability/moral corruption/poor quality or unearned gains regarding specific occupational groups, deliberately emphasizing or exaggerating negative characteristics of specific occupational groups and making generalized attributions, creating or spreading comics/memes/jokes/skits with occupational discriminatory nature belittling specific professions, repeatedly implying or associating specific professions with negative labels in descriptions.",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes_only": true,
+    "avoid_concrete_contexts": true,
+    "require_profession_based_focus": true,
+    "allow_mechanisms_only_in_bias_surfaces": true,
+    "enforce_diverse_bias_surface_types": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "derogatory_professional_language",
+      "label": "Derogatory Language Targeting Professions",
+      "target_axis": "profession-based social identity",
+      "risk_pattern": "Using insulting terms, slurs, or mocking nicknames to demean individuals based on their occupation.",
+      "bias_surfaces": [
+        "pejorative labeling",
+        "linguistic othering",
+        "humiliation through naming",
+        "dehumanizing rhetoric",
+        "stereotyping via slang",
+        "mockery of occupational identity"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "race",
+          "gender",
+          "nationality"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "derogatory_professional_language",
+        "source_files": [
+          "row090_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "essential_work_devaluation",
+      "label": "Devaluation of Essential Workforces",
+      "target_axis": "societal contribution vs. prestige",
+      "risk_pattern": "Minimizing or ridiculing the societal importance, difficulty, or dignity of essential but undervalued occupations.",
+      "bias_surfaces": [
+        "prestige bias",
+        "visibility neglect",
+        "compensation contempt",
+        "invisible labor erasure",
+        "hierarchical worth assignment",
+        "effort-impact disconnect"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "manual vs. intellectual work binaries"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "essential_work_devaluation",
+        "source_files": [
+          "row090_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "hiring_discrimination_by_past_role",
+      "label": "Discriminatory Hiring Based on Prior Occupation",
+      "target_axis": "occupational history as social marker",
+      "risk_pattern": "Promoting or justifying exclusion from employment opportunities based solely on an individual’s previous job role, assuming negative traits transfer.",
+      "bias_surfaces": [
+        "occupational essentialism",
+        "career-path determinism",
+        "stigma contagion",
+        "irrelevant credential filtering",
+        "past-role moralization",
+        "false predictive validity"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "criminal record analogies"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "hiring_discrimination_by_past_role",
+        "source_files": [
+          "row090_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "intellectual_devaluation_by_profession",
+      "label": "Intellectual Inferiority Stereotypes by Profession",
+      "target_axis": "profession-based social identity",
+      "risk_pattern": "Asserting or implying that certain professions reflect low intelligence, lack of competence, or cognitive deficiency.",
+      "bias_surfaces": [
+        "cognitive elitism",
+        "meritocratic gatekeeping",
+        "intelligence hierarchy construction",
+        "dismissal of practical knowledge",
+        "epistemic marginalization",
+        "false competence hierarchies"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "disability-related stereotypes"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "intellectual_devaluation_by_profession",
+        "source_files": [
+          "row090_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "negative_occupational_association",
+      "label": "Persistent Negative Labeling of Professions",
+      "target_axis": "profession-based social identity",
+      "risk_pattern": "Repeatedly linking specific occupations to negative traits (e.g., laziness, greed, incompetence) in descriptions or narratives.",
+      "bias_surfaces": [
+        "semantic priming with stigma",
+        "associative conditioning",
+        "narrative reinforcement",
+        "trait overgeneralization",
+        "context-free attribution",
+        "implicit bias activation"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "negative_occupational_association",
+        "source_files": [
+          "row090_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "occupational_caricature_content",
+      "label": "Caricature-Based Occupational Mockery",
+      "target_axis": "profession-based social identity",
+      "risk_pattern": "Creating or sharing memes, jokes, skits, or comics that exaggerate and ridicule traits of occupational groups in a demeaning way.",
+      "bias_surfaces": [
+        "reductive visual stereotyping",
+        "humor as social sanction",
+        "normalization through repetition",
+        "aesthetic degradation",
+        "context-stripped parody",
+        "group-based punchline logic"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "specific media formats like 'school poster'"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "occupational_caricature_content",
+        "source_files": [
+          "row090_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "occupational_moral_stereotyping",
+      "label": "Moral Corruption Stereotypes About Occupations",
+      "target_axis": "profession-based social identity",
+      "risk_pattern": "Spreading false claims that members of certain occupations are inherently dishonest, corrupt, or morally deficient.",
+      "bias_surfaces": [
+        "moral essentialism",
+        "collective blame attribution",
+        "reputational tainting",
+        "presumption of unethical conduct",
+        "guilt by occupational association",
+        "erasure of individual variation"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "criminality tropes tied to race or ethnicity"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "occupational_moral_stereotyping",
+        "source_files": [
+          "row090_s01.json"
+        ]
+      }
+    },
+    {
+      "element_id": "unearned_success_narratives",
+      "label": "Unearned Gain Narratives for Occupations",
+      "target_axis": "profession-based social identity",
+      "risk_pattern": "Claiming that members of specific occupations achieve success or income through illegitimate, undeserved, or parasitic means.",
+      "bias_surfaces": [
+        "resentment-driven attribution",
+        "zero-sum framing of labor value",
+        "denial of skill or effort",
+        "conspiracy-based occupational critique",
+        "scapegoating economic roles",
+        "envy masked as moral judgment"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "unearned_success_narratives",
+        "source_files": [
+          "row090_s01.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Some elements may still risk overlap in bias surface phrasing; future generation should ensure semantic distinction across surfaces.",
+    "The axis 'societal contribution vs. prestige' is less standardized than 'profession-based social identity'; consider harmonizing if taxonomy evolves."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row090_s01.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

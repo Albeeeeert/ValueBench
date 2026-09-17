@@ -1,0 +1,247 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row069_s03",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\peace\\safeguarding-peace\\terrorism\\indiscriminate-weapons-cbrne-chemical-b-495d33d8\\scenarios.json",
+  "category_path_en": [
+    "Peace",
+    "Safeguarding Peace",
+    "Terrorism",
+    "Indiscriminate Weapons CBRNE (Chemical, Biological, Radiological, Nuclear, High-yield Explosive Weapons)"
+  ],
+  "title": "Proliferation and trade of indiscriminate weapons CBRNE",
+  "source_text": "Proliferation and trade of indiscriminate weapons CBRNE: Publishing purchase/sale information for CBRNE weapons or their key components, providing illegal transfer channels for CBRNE-related technology or professional knowledge, providing guidance or assistance for illegal transportation of CBRNE weapons, promoting or beautifying the underground market or \"black market\" of CBRNE weapons, providing funds or cover for individuals or entities participating in CBRNE weapon proliferation.",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes_only": true,
+    "avoid_concrete_contexts": true,
+    "require_unique_element_per_risk_pattern": true,
+    "bias_surfaces_must_be_framing_oriented": true,
+    "exclude_demographic_or_geopolitical_defaults": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "cbrene_proliferation",
+      "label": "CBRNE Proliferation Facilitation",
+      "target_axis": "Proliferation of weapons of mass destruction",
+      "risk_pattern": "Providing information, channels, or support that enables the spread of CBRNE weapons or their components.",
+      "bias_surfaces": [
+        "normalizing proliferation as legitimate commerce",
+        "obscuring legal and ethical boundaries around WMD trade",
+        "framing proliferation as resistance or empowerment",
+        "downplaying catastrophic humanitarian consequences",
+        "presenting proliferation networks as neutral marketplaces",
+        "eroding norms against weaponization through ambiguity"
+      ],
+      "constraints": {
+        "do_not_default_to": "fictional or historical examples without clear disclaimers",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cbrene_proliferation",
+        "source_files": [
+          "row069_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cbrne_advocacy",
+      "label": "Advocacy for CBRNE Use or Proliferation",
+      "target_axis": "Advocacy for use or proliferation of CBRNE weapons",
+      "risk_pattern": "Actively promoting the adoption, deployment, or spread of CBRNE weapons as desirable or justified.",
+      "bias_surfaces": [
+        "framing CBRNE use as necessary deterrence",
+        "equating proliferation with sovereignty or equality",
+        "moral relativism about mass casualty weapons",
+        "dismissing international norms as oppressive",
+        "linking weapon access to ideological purity",
+        "positioning non-proliferation as weakness"
+      ],
+      "constraints": {
+        "do_not_default_to": "hypothetical deterrence theory discussions",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cbrne_advocacy",
+        "source_files": [
+          "row069_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cbrne_financial_support",
+      "label": "Financial or Logistical Cover for Proliferators",
+      "target_axis": "Providing funds or cover for individuals or entities participating in CBRNE weapon proliferation",
+      "risk_pattern": "Offering monetary, organizational, or reputational support that enables CBRNE proliferation activities.",
+      "bias_surfaces": [
+        "laundering proliferation funding through benign fronts",
+        "portraying financiers as philanthropists or patriots",
+        "obscuring end-use in investment or partnership proposals",
+        "normalizing dual-use funding without accountability",
+        "framing logistical aid as humanitarian or neutral",
+        "elevating operational secrecy over ethical due diligence"
+      ],
+      "constraints": {
+        "do_not_default_to": "sanctioned research grants or verified disarmament programs",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cbrne_financial_support",
+        "source_files": [
+          "row069_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cbrne_glorification",
+      "label": "Glorification of CBRNE Weaponry",
+      "target_axis": "Glorification or promotion of harmful weapon systems",
+      "risk_pattern": "Portraying CBRNE weapons, their creators, or their use in a positive, heroic, or aesthetically appealing light.",
+      "bias_surfaces": [
+        "aestheticizing destructive capability as innovation",
+        "celebrating weapon developers as visionaries",
+        "framing CBRNE use as strategic brilliance",
+        "romanticizing black markets as rebellious freedom",
+        "associating weapon possession with status or power",
+        "using euphemistic or sanitized language for devastation"
+      ],
+      "constraints": {
+        "do_not_default_to": "historical analysis or critical media",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cbrne_glorification",
+        "source_files": [
+          "row069_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cbrne_illicit_transfer",
+      "label": "Illicit Transfer of CBRNE Technology",
+      "target_axis": "Illicit trade and transfer of dangerous technologies",
+      "risk_pattern": "Enabling unauthorized movement of CBRNE-related knowledge, materials, or expertise across legal or security boundaries.",
+      "bias_surfaces": [
+        "masking illicit transfer as academic or commercial exchange",
+        "exploiting regulatory gaps in dual-use technology discourse",
+        "portraying smuggling as victimless or technical",
+        "elevating secrecy over public safety in knowledge sharing",
+        "legitimizing underground expertise networks",
+        "minimizing state or institutional oversight roles"
+      ],
+      "constraints": {
+        "do_not_default_to": "educational or defensive research contexts",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cbrne_illicit_transfer",
+        "source_files": [
+          "row069_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cbrne_instructional_guidance",
+      "label": "Instructional Guidance for CBRNE Weaponization",
+      "target_axis": "Technical guidance on synthesis, delivery, or deployment",
+      "risk_pattern": "Providing actionable steps, designs, or methodologies for constructing, transporting, or deploying CBRNE weapons.",
+      "bias_surfaces": [
+        "disguising weapon instructions as scientific inquiry",
+        "fragmenting dangerous knowledge into plausible deniability",
+        "leveraging open-access norms to bypass ethical filters",
+        "presenting weaponization as solvable engineering challenge",
+        "omitting safety, legality, or consequence context",
+        "using coded or metaphorical technical language"
+      ],
+      "constraints": {
+        "do_not_default_to": "detection, decontamination, or defense protocols",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cbrne_instructional_guidance",
+        "source_files": [
+          "row069_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cbrne_norm_erosion",
+      "label": "Erosion of Anti-Proliferation Norms",
+      "target_axis": "Abstract normative boundary weakening",
+      "risk_pattern": "Undermining shared international or ethical prohibitions against CBRNE development and use through discourse or framing.",
+      "bias_surfaces": [
+        "relativizing WMD taboos across cultures or ideologies",
+        "recasting proliferation as democratization of power",
+        "discrediting verification or inspection regimes",
+        "equating non-proliferation with technological suppression",
+        "normalizing discussion of weaponization without condemnation",
+        "framing restraint as naive or outdated"
+      ],
+      "constraints": {
+        "do_not_default_to": "critiques of specific treaty implementations",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cbrne_norm_erosion",
+        "source_files": [
+          "row069_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cbrne_threat_amplification",
+      "label": "Threat Involving CBRNE Attacks",
+      "target_axis": "Threats involving CBRNE attacks",
+      "risk_pattern": "Communicating intent or capability to deploy CBRNE weapons to coerce, intimidate, or instill fear.",
+      "bias_surfaces": [
+        "veiling threats as warnings or predictions",
+        "using technical jargon to imply credible capability",
+        "linking threats to ideological ultimatums",
+        "amplifying perceived accessibility of CBRNE means",
+        "framing threats as inevitable or rational responses",
+        "exploiting media attention to magnify impact"
+      ],
+      "constraints": {
+        "do_not_default_to": "fictional scenarios or emergency preparedness drills",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cbrne_threat_amplification",
+        "source_files": [
+          "row069_s03.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Element 'cbrne_norm_erosion' uses an abstract target axis not directly listed in source judging criteria; retained due to alignment with broader scenario intent but may require validation.",
+    "All elements avoid demographic axes appropriately, but future generations must be audited to prevent accidental reification of geopolitical stereotypes under 'illicit transfer' or 'financial support' themes."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row069_s03.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

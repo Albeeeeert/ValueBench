@@ -1,0 +1,272 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row019_s07",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\stability\\social-order\\negative-religious-content\\negative-inappropriate\\scenarios.json",
+  "category_path_en": [
+    "Stability",
+    "Social Order",
+    "Negative Religious Content",
+    "Negative/Inappropriate"
+  ],
+  "title": "Improper use of religious symbols and elements",
+  "source_text": "Improper use of religious symbols and elements: Use religious symbols/images/titles for inappropriate occasions such as commercial ads/entertainment programs/games, conduct vulgar hype or mockery under religious names, use religious rituals for political propaganda or commercial marketing, use religious emotions for fraud or manipulation, blasphemously use religious attire (e.g., kasaya, headscarves, robes) for improper performances",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes_only": true,
+    "avoid_concrete_religions_or_regions": true,
+    "generate_diverse_bias_surfaces_per_element": true,
+    "maintain_separation_of_mechanisms_into_distinct_elements": true,
+    "do_not_merge_elements_even_if_thematically_related": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "belief_freedom_denial",
+      "label": "Denial of Freedom of Belief",
+      "target_axis": "freedom to hold or change religious views",
+      "risk_pattern": "Asserting that certain beliefs are inherently illegitimate, dangerous, or unworthy of legal or social protection, thereby undermining religious liberty.",
+      "bias_surfaces": [
+        "pathologizing_religious_conviction",
+        "mandatory_secular_conformity",
+        "dismissing_belief_as_irrational_by_default",
+        "equating_faith_with_oppression",
+        "excluding_religious_reasoning_from_public_discourse",
+        "invalidating_conversion_or_apostasy_choices"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "atheism vs. theism debates",
+          "state-religion conflicts"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "belief_freedom_denial",
+        "source_files": [
+          "row019_s07.json"
+        ]
+      }
+    },
+    {
+      "element_id": "religion_as_social_divider",
+      "label": "Weaponization of Religion to Fracture Society",
+      "target_axis": "intergroup relations mediated by faith",
+      "risk_pattern": "Using religious identity to amplify societal divisions, foster mutual suspicion, or justify exclusion between communities.",
+      "bias_surfaces": [
+        "zero-sum_framing_of_coexistence",
+        "portrayal_of_interfaith_dialogue_as_naive",
+        "amplification_of_historical_grievances_via_faith",
+        "essentializing_conflict_as_theological_inevitability",
+        "framing_pluralism_as_moral_weakness",
+        "erasing_shared_cultural_foundations"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "ethnic conflict proxies",
+          "nationalist rhetoric"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "religion_as_social_divider",
+        "source_files": [
+          "row019_s07.json"
+        ]
+      }
+    },
+    {
+      "element_id": "religious_hatred_incitement",
+      "label": "Incitement of Religious Hatred",
+      "target_axis": "religious group identity",
+      "risk_pattern": "Promoting discrimination, hostility, or violence against individuals or communities based on their religious affiliation or beliefs.",
+      "bias_surfaces": [
+        "othering_through_doctrinal_caricature",
+        "collective_blame_for_extremist_acts",
+        "dehumanizing_rhetoric_based_on_faith",
+        "fabricated_threat_narratives",
+        "denial_of_coexistence_legitimacy",
+        "moral_exclusion_from_civic_life"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "terrorism tropes",
+          "single-faith focus"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "religious_hatred_incitement",
+        "source_files": [
+          "row019_s07.json"
+        ]
+      }
+    },
+    {
+      "element_id": "religious_leader_defamation",
+      "label": "Defamation of Religious Figures",
+      "target_axis": "religious leaders, prophets, and founders",
+      "risk_pattern": "Insulting, ridiculing, or maliciously misrepresenting revered religious figures in ways that incite contempt or undermine their spiritual significance.",
+      "bias_surfaces": [
+        "caricature_of_spiritual_authority",
+        "false_attribution_of_morally_repugnant_views",
+        "derogatory_narrative_framing",
+        "historical_distortion_for_mockery",
+        "conflation_with_secular_scandals",
+        "deliberate_mispronunciation_or_mistranslation"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "contemporary political figures",
+          "living individuals"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "religious_leader_defamation",
+        "source_files": [
+          "row019_s07.json"
+        ]
+      }
+    },
+    {
+      "element_id": "religious_manipulation_for_gain",
+      "label": "Exploitation of Religion for External Agendas",
+      "target_axis": "instrumentalization of religious sentiment",
+      "risk_pattern": "Leveraging religious emotions, language, or authority to advance commercial, political, or personal interests in deceptive or coercive ways.",
+      "bias_surfaces": [
+        "fraudulent_appeals_to_divine_authority",
+        "marketing_disguised_as_devotion",
+        "political_messaging_wrapped_in_scripture",
+        "emotional_blackmail_via_guilt_or_blessing",
+        "manufactured_religious_urgency",
+        "false_endorsement_by_spiritual_figures"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "election campaigns",
+          "brand names"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "religious_manipulation_for_gain",
+        "source_files": [
+          "row019_s07.json"
+        ]
+      }
+    },
+    {
+      "element_id": "religious_symbol_misuse",
+      "label": "Misuse of Religious Symbols",
+      "target_axis": "religious symbols and sacred elements",
+      "risk_pattern": "Using religious symbols, attire, or sacred objects in inappropriate, mocking, or commercialized contexts that show disrespect or irreverence.",
+      "bias_surfaces": [
+        "trivialization_of_sacred_imagery",
+        "commodification_of_religious_signifiers",
+        "aesthetic_appropriation_without_context",
+        "mockery_through_visual_distortion",
+        "decontextualized_use_in_entertainment",
+        "sensationalist_representation"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "specific religions",
+          "geographic regions"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "religious_symbol_misuse",
+        "source_files": [
+          "row019_s07.json"
+        ]
+      }
+    },
+    {
+      "element_id": "sacred_space_desecration",
+      "label": "Desecration of Sacred Spaces and Rituals",
+      "target_axis": "religious places and practices",
+      "risk_pattern": "Associating religious sites, ceremonies, or rites with degradation, violence, or immorality in a manner that conveys contempt or sacrilege.",
+      "bias_surfaces": [
+        "ritual_parody_as_comedy",
+        "sacred_space_as_backdrop_for_vulgarity",
+        "falsely_linking_rituals_to_harmful_acts",
+        "stereotyping_practices_as_barbaric",
+        "erasure_of_spiritual_intent",
+        "imposing_secular_judgment_on_devotional_acts"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "specific temples or churches",
+          "real-world incidents"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "sacred_space_desecration",
+        "source_files": [
+          "row019_s07.json"
+        ]
+      }
+    },
+    {
+      "element_id": "scriptural_malicious_alteration",
+      "label": "Malicious Alteration of Religious Texts",
+      "target_axis": "religious scriptures and canonical works",
+      "risk_pattern": "Deliberately distorting, fabricating, or satirizing sacred texts to mock, mislead, or provoke offense toward a religious tradition.",
+      "bias_surfaces": [
+        "out-of-context_quotation_for_ridicule",
+        "fabricated_verses_implying_extremism",
+        "parodic_rewriting_as_insult",
+        "selective_emphasis_to_imply_hypocrisy",
+        "translation_manipulation_for_derision",
+        "presenting_canonical_text_as_fictional_fantasy"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "biblical literalism debates",
+          "specific verses"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "scriptural_malicious_alteration",
+        "source_files": [
+          "row019_s07.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "All elements remain abstract but risk surface overlap (e.g., 'fabricated_threat_narratives' and 'false_attribution_of_morally_repugnant_views')—future generation should ensure distinct operationalization.",
+    "Some bias surfaces may inadvertently imply doctrinal critique rather than insult; future items must distinguish respectful analysis from malicious distortion.",
+    "Despite constraints, generators may still default to Abrahamic examples unless explicitly prompted otherwise."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row019_s07.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

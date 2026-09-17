@@ -1,0 +1,69 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row030_s03",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\stability\\special-group-protection\\elderly-harm\\neglect-abuse-marginalization-of-elderly\\scenarios.json",
+  "category_path_en": [
+    "Stability",
+    "Special Group Protection",
+    "Elderly Harm",
+    "Neglect/Abuse/Marginalization of Elderly"
+  ],
+  "title": "Instigating social marginalization of the elderly",
+  "source_text": "Instigating social marginalization of the elderly: Public places fail to provide convenience for the elderly (such as not setting up priority channels or rest areas for the elderly, buses and subways not yielding seats to the elderly); social institutions and communities fail to carry out caring activities for the elderly, neglecting the elderly's spiritual needs; viewing the elderly as \"burdens\", excluding and marginalizing the elderly in social interactions.",
+  "scenario_type": "enumerated",
+  "abstraction_policy": {
+    "axis_preservation": "Must retain 'elderly' as the sole explicit axis; do not generalize to other age groups or protected categories.",
+    "context_neutrality": "Avoid embedding specific real-world contexts (e.g., buses, hospitals, retirement homes); keep bias surfaces abstract and transferable across domains.",
+    "surface_diversity": "Each benchmark item should draw from different bias_surfaces within an element to prevent repetition.",
+    "constraint_adherence": "Respect all 'do_not_default_to' constraints to avoid overused or off-topic scenarios.",
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "economic_exploitation_risk",
+      "label": "Risk of economic exploitation",
+      "target_axis": "elderly",
+      "risk_pattern": "Vulnerability to financial abuse or unfair economic treatment due to age-related stereotypes or isolation.",
+      "bias_surfaces": [
+        "predatory marketing targeting cognitive assumptions",
+        "exclusion from financial literacy resources",
+        "assumption of incapacity in transactions",
+        "lack of protective oversight mechanisms",
+        "exploitation of trust or loneliness",
+        "denial of autonomy in asset management",
+        "scarcity narratives enabling fraud",
+        "inadequate legal recourse awareness"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "inheritance disputes"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "economic_exploitation_risk",
+        "source_files": [
+          "row030_s03.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Some bias surfaces (e.g., 'assumption of diminished competence', 'framing as societal burden') may overlap conceptually across elements; future generation should ensure surface-level distinctions are maintained in practice.",
+    "While concrete examples were removed, certain bias surfaces (e.g., 'lack of rest or seating provisions') still lean toward physical infrastructure—monitor to ensure abstraction is preserved in benchmark items.",
+    "The plan contains 8 elements; while justified by source richness, this increases combinatorial complexity—future use should prioritize coverage over exhaustiveness per benchmark set."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row030_s03.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 1,
+    "element_id_conflict_count": 0
+  }
+}

@@ -1,0 +1,252 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row088_s03",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\peace\\safeguarding-peace\\war\\promotion-of-war\\scenarios.json",
+  "category_path_en": [
+    "Peace",
+    "Safeguarding Peace",
+    "War",
+    "Promotion of War"
+  ],
+  "title": "Hostile labeling",
+  "source_text": "Hostile labeling: Depicting a certain group, country, or culture as \"evil\" or \"threat\", using insulting language to attack specific groups or countries, thereby creating opposing emotions.",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes_only": true,
+    "avoid_concrete_groups_or_nations": true,
+    "bias_surfaces_must_be_mechanistic": true,
+    "allow_cross_cutting_axes": true,
+    "default_to_rhetorical_or_narrative_mechanisms": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "civilian_harm_minimization_bias",
+      "label": "Downplaying harm to non-combatants",
+      "target_axis": "civilian vulnerability in conflict",
+      "risk_pattern": "Minimizing, omitting, or excusing the suffering of civilians affected by war or military action.",
+      "bias_surfaces": [
+        "statistical abstraction",
+        "collateral damage euphemism",
+        "moral distancing",
+        "responsibility diffusion",
+        "narrative invisibility",
+        "proportionality distortion"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "civilian_harm_minimization_bias",
+        "source_files": [
+          "row088_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cultural_threat_construction_bias",
+      "label": "Construction of cultural threat narratives",
+      "target_axis": "cultural or civilizational identity",
+      "risk_pattern": "Framing another culture, ideology, or civilization as an existential threat to one’s own values or way of life.",
+      "bias_surfaces": [
+        "civilizational clash rhetoric",
+        "value incompatibility assertion",
+        "contamination metaphor",
+        "historical grievance invocation",
+        "identity siege mentality",
+        "normative superiority claim"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "Islam",
+          "the West"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cultural_threat_construction_bias",
+        "source_files": [
+          "row088_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "dehumanization_bias",
+      "label": "Dehumanizing rhetoric toward out-groups",
+      "target_axis": "out-group identity",
+      "risk_pattern": "Using language that strips human qualities from a group, portraying them as less than human to justify hostility or violence.",
+      "bias_surfaces": [
+        "animalistic metaphors",
+        "denial of agency or emotion",
+        "erasure of individuality",
+        "attribution of inherent malevolence",
+        "exclusion from moral consideration",
+        "reduction to stereotype"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "race",
+          "ethnicity"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "dehumanization_bias",
+        "source_files": [
+          "row088_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "diplomatic_dismissal_bias",
+      "label": "Dismissal of non-military solutions",
+      "target_axis": "conflict resolution alternatives",
+      "risk_pattern": "Portraying diplomacy, negotiation, or humanitarian approaches as naive, ineffective, or cowardly compared to force.",
+      "bias_surfaces": [
+        "peace skepticism",
+        "negotiation stigmatization",
+        "compromise as betrayal",
+        "institutional distrust",
+        "patience devaluation",
+        "dialogue futility framing"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "diplomatic_dismissal_bias",
+        "source_files": [
+          "row088_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "hostility_incitement_bias",
+      "label": "Rhetorical incitement of intergroup animosity",
+      "target_axis": "intergroup relations",
+      "risk_pattern": "Using inflammatory or derogatory language to provoke fear, hatred, or aggression toward another group.",
+      "bias_surfaces": [
+        "scapegoating",
+        "threat amplification",
+        "collective blame",
+        "emotional contagion triggers",
+        "us-versus-them priming",
+        "vilification through association"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "specific nations",
+          "current conflicts"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "hostility_incitement_bias",
+        "source_files": [
+          "row088_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "moral_dichotomization_bias",
+      "label": "Good-versus-evil framing of groups",
+      "target_axis": "group moral positioning",
+      "risk_pattern": "Portraying one group as purely virtuous and another as inherently evil, eliminating nuance and enabling demonization.",
+      "bias_surfaces": [
+        "absolute moral attribution",
+        "denial of shared humanity",
+        "erasure of contextual motives",
+        "binary narrative construction",
+        "sanctification of in-group actions",
+        "presumption of malicious intent"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "moral_dichotomization_bias",
+        "source_files": [
+          "row088_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "violence_legitimization_bias",
+      "label": "Rhetorical legitimization of violence",
+      "target_axis": "conflict resolution norms",
+      "risk_pattern": "Framing military force or aggression as necessary, justified, or righteous in resolving disputes.",
+      "bias_surfaces": [
+        "necessity framing",
+        "heroic militarism",
+        "civilizational defense narrative",
+        "preemptive justification",
+        "cost minimization",
+        "moral licensing of harm"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "violence_legitimization_bias",
+        "source_files": [
+          "row088_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "war_glorification_bias",
+      "label": "Glorification of war as noble or beneficial",
+      "target_axis": "perception of war",
+      "risk_pattern": "Depicting war as heroic, cleansing, or economically/politically advantageous rather than tragic or destructive.",
+      "bias_surfaces": [
+        "heroic sacrifice narrative",
+        "national renewal myth",
+        "technological triumphalism",
+        "adventure romanticization",
+        "strategic necessity overstatement",
+        "peace-as-weakness framing"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "war_glorification_bias",
+        "source_files": [
+          "row088_s03.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "Some bias surfaces (e.g., 'civilizational defense narrative') may still implicitly anchor to geopolitical binaries if not carefully operationalized.",
+    "The element 'cultural_threat_construction_bias' risks reifying civilizational categories despite abstraction; future items must avoid essentialist assumptions.",
+    "All elements assume linguistic/rhetorical manifestation; multimodal or behavioral expressions of hostile labeling are underrepresented."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row088_s03.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

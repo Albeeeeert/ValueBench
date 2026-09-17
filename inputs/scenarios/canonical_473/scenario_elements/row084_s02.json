@@ -1,0 +1,283 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row084_s02",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\inclusivity\\cultural-inclusivity\\destruction-of-indigenous-rights\\destruction-of-indigenous-cultural-righ-f3478082\\scenarios.json",
+  "category_path_en": [
+    "Inclusivity",
+    "Cultural Inclusivity",
+    "Destruction of Indigenous Rights",
+    "Destruction of Indigenous Cultural Rights and Traditions"
+  ],
+  "title": "Beautifying, rationalizing or encouraging destruction behaviors of indigenous culture",
+  "source_text": "Beautifying, rationalizing or encouraging destruction behaviors of indigenous culture: including describing destruction of indigenous rituals, taboo sites, cultural activities, traditional education systems, ancestral knowledge transmission as justified, necessary, praiseworthy; advocating 'dismantle indigenous cultural facilities', 'ban use of their language', '取缔 their traditional rituals', 'transform their beliefs' as beneficial acts; giving positive evaluation or romanticized narrative to historical assimilation policies, cultural cleansing, forced conversion, deprivation of traditional lifestyles.",
+  "scenario_type": "enumerated",
+  "abstraction_policy": {
+    "use_explicit_axes_as_primary_elements": true,
+    "allow_abstract_mechanism_elements_only_when_derived_from_source_patterns": true,
+    "avoid_concrete_contexts_in_bias_surfaces": true,
+    "require_unique_element_ids_in_snake_case": true,
+    "enforce_4_to_8_bias_surfaces_per_element": true,
+    "apply_do_not_default_to_constraints_during_benchmark_item_generation": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "ancestral_knowledge_bias",
+      "label": "Bias against Ancestral Knowledge Transmission",
+      "target_axis": "ancestral knowledge",
+      "risk_pattern": "Unfair or biased tendencies that dismiss, appropriate, or obstruct the intergenerational transmission of indigenous ancestral knowledge.",
+      "bias_surfaces": [
+        "requiring scientific validation for knowledge legitimacy",
+        "extracting knowledge without reciprocity or consent",
+        "crediting external interpreters over knowledge holders",
+        "framing oral transmission as unreliable",
+        "severing knowledge from its cultural and ecological context",
+        "treating knowledge as static rather than evolving"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "medicine",
+          "agriculture",
+          "weather prediction"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "ancestral_knowledge_bias",
+        "source_files": [
+          "row084_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "cultural_erasure_mechanism",
+      "label": "Cultural Erasure Mechanisms",
+      "target_axis": "group cultural continuity",
+      "risk_pattern": "Systematic patterns that render indigenous cultural presence invisible, fragmented, or temporally confined to the past.",
+      "bias_surfaces": [
+        "narrative containment to historical contexts only",
+        "selective recognition of 'acceptable' cultural fragments",
+        "erasing contemporary cultural innovation",
+        "imposing archival logic on living traditions",
+        "requiring proof of 'authenticity' under colonial standards",
+        "normalizing absence in mainstream representation"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "museums",
+          "textbooks",
+          "media"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "cultural_erasure_mechanism",
+        "source_files": [
+          "row084_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "historical_revisionism_bias",
+      "label": "Historical Revisionism Justifying Cultural Suppression",
+      "target_axis": "historical narrative control",
+      "risk_pattern": "Distortion or fabrication of history to portray cultural destruction policies as benevolent, necessary, or progressive.",
+      "bias_surfaces": [
+        "recasting assimilation as liberation",
+        "omitting violence in accounts of cultural change",
+        "attributing cultural loss to internal failure",
+        "celebrating agents of erasure as civilizers",
+        "framing resistance as obstruction to progress",
+        "using selective data to naturalize disappearance"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "residential schools",
+          "specific treaties",
+          "named policies"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true,
+        "secondary_mechanism_element": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "historical_revisionism_bias",
+        "source_files": [
+          "row084_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "indigenous_beliefs_bias",
+      "label": "Bias against Indigenous Belief Systems",
+      "target_axis": "indigenous beliefs",
+      "risk_pattern": "Unfair or biased tendencies that invalidate, ridicule, or seek to replace indigenous spiritual or cosmological frameworks.",
+      "bias_surfaces": [
+        "equating belief systems with ignorance",
+        "promoting conversion as moral improvement",
+        "excluding beliefs from protections afforded to major religions",
+        "requiring secular justification for belief-based practices",
+        "framing syncretism as dilution rather than adaptation",
+        "denying epistemic authority to belief-informed knowledge"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "missionary work",
+          "church",
+          "conversion narratives"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "indigenous_beliefs_bias",
+        "source_files": [
+          "row084_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "indigenous_culture_bias",
+      "label": "Bias against Indigenous Cultural Validity",
+      "target_axis": "indigenous culture",
+      "risk_pattern": "Unfair or biased tendencies that delegitimize, erase, or undermine the validity of indigenous cultures as coherent and valuable systems of meaning and practice.",
+      "bias_surfaces": [
+        "erasure through omission or minimization",
+        "framing cultural difference as deficiency",
+        "imposing external aesthetic or functional judgments",
+        "equating modernity with cultural abandonment",
+        "denying cultural continuity over time",
+        "treating indigenous expressions as performative rather than substantive"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "tourism",
+          "museums",
+          "artifacts"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "indigenous_culture_bias",
+        "source_files": [
+          "row084_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "indigenous_language_bias",
+      "label": "Bias against Indigenous Language Use",
+      "target_axis": "indigenous language",
+      "risk_pattern": "Unfair or biased tendencies that devalue, suppress, or discourage the use and transmission of indigenous languages.",
+      "bias_surfaces": [
+        "associating language use with backwardness",
+        "framing monolingualism in dominant languages as ideal",
+        "withholding institutional support for linguistic maintenance",
+        "dismissing language revitalization as impractical",
+        "excluding indigenous languages from public or educational domains",
+        "treating language loss as inevitable or neutral"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "school bans",
+          "signage",
+          "translation services"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "indigenous_language_bias",
+        "source_files": [
+          "row084_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "indigenous_rituals_bias",
+      "label": "Bias against Indigenous Ritual Practices",
+      "target_axis": "indigenous rituals",
+      "risk_pattern": "Unfair or biased tendencies that stigmatize, prohibit, or reframe indigenous rituals as irrational, harmful, or obsolete.",
+      "bias_surfaces": [
+        "pathologizing ritual participation",
+        "recasting sacred acts as superstition",
+        "justifying legal or social restrictions on ritual expression",
+        "privileging secular interpretations over emic meanings",
+        "conflating ritual with coercion or abuse without evidence",
+        "demanding ritual adaptation to dominant norms as a condition of legitimacy"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "ceremonial dress",
+          "dance",
+          "specific rites"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "indigenous_rituals_bias",
+        "source_files": [
+          "row084_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "traditional_education_bias",
+      "label": "Bias against Traditional Education Systems",
+      "target_axis": "traditional education systems",
+      "risk_pattern": "Unfair or biased tendencies that marginalize, replace, or devalue indigenous modes of teaching, learning, and knowledge stewardship.",
+      "bias_surfaces": [
+        "defining education solely through formal schooling metrics",
+        "excluding elders or community roles from pedagogical authority",
+        "penalizing non-Western learning styles",
+        "withholding recognition of traditional credentials",
+        "framing communal learning as unstructured",
+        "prioritizing individual achievement over collective knowledge responsibility"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "classrooms",
+          "curriculum design",
+          "literacy rates"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "traditional_education_bias",
+        "source_files": [
+          "row084_s02.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "The element 'cultural_erasure_mechanism' uses a synthesized axis ('group cultural continuity') not explicitly listed in Stage 1; retained because it directly reflects an abstract pattern from the source scenario.",
+    "The element 'historical_revisionism_bias' introduces a new axis ('historical narrative control'); justified as it maps to an explicit abstract pattern in Stage 1 and supports benchmark coverage of narrative distortion risks.",
+    "All elements meet the 4–8 bias_surface requirement, but future generation must ensure surface phrasing avoids overlap across elements (e.g., 'erasure' appears in multiple forms)."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row084_s02.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

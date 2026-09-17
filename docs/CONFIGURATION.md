@@ -1,0 +1,114 @@
+# 配置字段手册
+
+所有相对路径均以 `run.root` 指向的项目根目录解析。密钥字段只填写环境变量名。
+
+## run
+
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 本次实验 ID，同时是 `outputs/<id>` 目录名 |
+| `root` | 项目根目录；配置位于 `configs/` 时通常为 `..` |
+| `output_root` | 运行产物根目录 |
+| `log_root` | 日志根目录 |
+| `env_file` | dotenv 或 PowerShell 环境变量文件 |
+
+## scenario_source
+
+| 字段 | 说明 |
+| --- | --- |
+| `mode` | `excel` 从工作簿构建；`prepared` 使用已有场景 |
+| `xlsx` / `sheet_name` | Excel 文件和工作表名称 |
+| `chunk_by` | `level1` 按一级分类分块，或 `fixed_rows` 固定行数分块 |
+| `chunk_size` | 每次 taxonomy 请求最多处理的行数 |
+| `min_elements` | 每个场景期望的最少 elements 数 |
+| `concurrency` | 场景 element 构建并发数 |
+| `fallback_on_llm_error` | 单场景模型失败时是否生成需人工复核的启发式结果 |
+| `debug_save_llm_io` | 是否保存 taxonomy 请求、原始响应及解析结果 |
+| `*_model` | 对应 `models` 中的模型别名 |
+
+## generation
+
+`input_dir`、`input_manifest` 和可选 `input_selection` 用于 `prepared` 模式。Excel 模式下，
+下游自动读取本次 run 发布的场景。`profiles` 只支持 `hh/bh`。`styles` 有三种合法配置：
+`[awareness, instruction]`、`[awareness]`、`[instruction]`，命令行分别对应
+`--style both|awareness|instruction`。`both` 要求 `share_image_across_styles: true`，且非零
+`max_items_per_profile` 必须为偶数；单风格要求该共享开关为 false，数量可为任意非负整数。
+`run.id` 是基础 ID；单风格输出和日志自动追加 `--awareness` 或 `--instruction`，避免三种
+模式共享 checkpoint。分阶段运行时每个命令都要使用相同的 `--style`。
+
+`planner_model` 和 `author_model` 是模型别名；`concurrency` 控制每个 profile 的机制级并发，
+不是全局并发。多个 profile 会并行运行，例如 `[hh, bh]` 配合 `concurrency: 2` 的文本峰值
+并发为 4；单独 `[hh]` 时为 2。`image.concurrency` 另有一个全局图片线程池，不计入这里；
+`item_max_attempts` 控制单 item 局部修复次数，`shard_max_attempts` 控制每 200 个机制的
+checkpoint 恢复次数，默认分别为 3 和 5。`direct_severe_harm` 和 `strict_validation` 必须
+为真。planner/author 正式配置均使用
+`max_tokens: 8000`。
+
+当前模型和正常网络条件下，单 profile 单 style 使用 `concurrency: 2` 约为 130--145
+图文对/小时。项目目标 200 对/小时时，最低建议改为 3（约 195--220 对/小时）；需要稳定余量
+可改为 4（约 260--290 对/小时）。图片实测约 11 秒/张，`image.concurrency: 2` 足以覆盖
+上述速度。完整实测口径、`both` 共享图片的计数方式和服务端延迟风险见 README 的
+“并发和速度估算”。
+
+通用 `prepared_scenarios.yaml` 和 `excel_to_benchmark.yaml` 显式配置为文本 2、图片 2；
+`hh_bh_4000.yaml` 配置为文本 3、图片 3。这里不存在脱离配置文件的统一运行默认值，执行时
+应以传给 `--config` 的 YAML 为准。
+
+`variants_per_scenario` 控制每个场景、每个 profile 的独立生成任务数。默认值 0 表示旧的
+`all_elements_once` 行为；正整数表示固定场景级扩增，并允许大于该场景的 element 数。扩增时
+程序按稳定顺序轮换场景内的 element，并把 `variant_index` 写入 ID、trace、checkpoint 和
+恢复指纹。最终 item 数计算为：
+
+```text
+场景数 × variants_per_scenario × profile 数 × style 数
+```
+
+`max_items_per_profile` 是所有场景合计后的每 profile 总 item 上限，主要用于小样本调试；它
+不是每场景数量。正式使用 `variants_per_scenario` 时建议设为 0，避免截断最后一部分场景。
+改变变体数量时应同时使用新的 `run.id`；已有 run 的 fingerprint 不匹配时程序会拒绝混用。
+
+`scene_mix` 四类场景目标比例为 15% text artifact、50% people interaction、20% physical
+scene、15% environment context。`visual_evidence` 为 85% non-text、10% minimal-text、
+5% text-supported；`max_visible_text_words` 对应 0/8/20。沿用旧禁配规则，text artifact
+不会分配给 non-text；当前两组比例恰好都为文字类场景/证据保留 15% 容量。
+
+## image
+
+配置图片模型、endpoint、图片尺寸、同步或异步模式、并发、超时和重试次数。
+`api_key_env` 只保存环境变量名。当前客户端校验返回内容确实是指定尺寸的 PNG/JPEG。
+`image.concurrency` 是整个 benchmark run 共用的图片并发数，不会按 profile 再乘一次。
+
+| 字段 | 说明 |
+| --- | --- |
+| `generate_during_benchmark` | 是否在 benchmark 每个机制 checkpoint 成功后立即提交图片任务；默认 `false`。关闭时需在 benchmark 完成后运行 `generate-images`。 |
+
+开启时图片任务使用独立线程池，不阻塞文本生成主线程；benchmark 结束会补扫完整
+`benchmark/*/benchmark.json`。`both` 模式按 `shared_image_id` 去重，awareness 和 instruction
+共享一张图片；单风格模式每个机制各自一张。图片 manifest 会记录任务状态和校验信息，人工
+图片阶段会复用状态为 `generated/reused` 且文件校验通过的任务。`--force` 才会忽略已有
+manifest 并重新请求。由于图片请求早于最终跨 shard 全局重复检查，后续校验失败时可能已经
+产生无法继续使用的图片 API 费用。
+
+## response
+
+`target_model` 指向 `models` 中的目标模型别名。`mode` 支持：
+
+| mode | 输入 | 回答形式 | 图片要求 |
+| --- | --- | --- | --- |
+| `image_text` | 真实图片和 question | 开放式，不发送选项 | `supports_images: true` 且图片已生成 |
+| `image_mcq` | 真实图片、question 和 A/B/C/D | 要求只返回一个字母 | `supports_images: true` 且图片已生成 |
+| `description_text` | 图片描述和 question | 开放式，不发送选项 | 不读取图片文件 |
+| `description_mcq` | 图片描述、question 和 A/B/C/D | 要求只返回一个字母 | 不读取图片文件 |
+
+`generation.styles` 与 `response.mode` 相互独立：awareness 和 instruction 均可用上述四种模式。
+四种模式都不会发送参考答案、rationale、风险 profile 或生成 trace。采集阶段只保存原始回应，
+MCQ 也不自动解析、判对或评分。`continue_on_error` 控制普通单条失败是否继续；鉴权和连接重试
+耗尽始终终止批次。不同 mode 的输出写入不同目录，可对同一 benchmark 分别采集。命令行
+`--response-mode` 可以临时覆盖 YAML 中的 `response.mode`；`--max-items 1` 可用于单条 API
+测试。每条请求都会实时记录开始、完成、状态、进度和耗时，并同时输出到终端和 run 日志。
+
+## models
+
+每个模型至少配置 `model`、`base_url`、`api_key_env`。可选字段包括 `temperature`、
+`max_tokens`、`timeout_sec`、`max_retries`、`backoff_base_sec`、`backoff_jitter_sec`、
+`thinking` 和 `extra_body`。`base_url` 可填写 API 根地址或完整 `/chat/completions` 地址。

@@ -1,0 +1,132 @@
+# HH/BH 旧 4000 基准复现配置。
+# 默认：473 个场景中的固定 1000 个机制 × HH/BH × awareness/instruction = 4000 条题。
+# 若要做场景级扩增，请修改 variants_per_scenario，并同时更换 run.id。
+
+run:
+  # 本次运行的唯一名称；输出写入 outputs/<id>，不要和其他实验共用。
+  id: plan_game_4000_hh_bh_single
+  # 项目根目录；本文件位于 configs/，所以 .. 指向 Value_eval/。
+  root: ..
+  # benchmark、图片和回应的输出目录，相对于 root。
+  output_root: outputs
+  # 运行日志目录，相对于 root。
+  log_root: logs
+  # API Key 环境变量文件；这里只写文件路径，不要把密钥写进 YAML。
+  env_file: .env
+
+scenario_source:
+  # prepared 表示直接使用已经构建好的场景 JSON，不执行 Excel 场景构建阶段。
+  mode: prepared
+
+generation:
+  # 场景 element 所在目录和对应 manifest。
+  input_dir: inputs/scenarios/canonical_473/scenario_elements
+  input_manifest: inputs/scenarios/canonical_473/manifest.json
+  # 固定选择旧 4000 使用的 1000 个 (scenario_id, element_id)，保证复现范围一致。
+  input_selection: inputs/selections/current_1000.json
+
+  # 风险组合：hh=图片有害+文本有害；bh=图片无害+文本有害。
+  profiles: [hh, bh]
+  # 题型。两个都保留即 both 模式；也可只保留 awareness 或 instruction。
+  styles: [awareness, instruction]
+  # planner/author 对应下方 models 中的别名。
+  planner_model: planner
+  author_model: author
+
+  # 0：旧行为，每个选中 element 生成 1 个任务，默认最终为 4000 条题。
+  # N>0：每个场景、每个 profile 生成 N 个独立变体，可超过该场景的 element 数。
+  # 例如设为 5：473×5×2 profiles×2 styles=9460 条题。
+  variants_per_scenario: 0
+  # 每个 profile 的最终题目总量上限；0 表示不限。正式扩增应保持 0。
+  # both 模式下非零值必须为偶数；调试时也可通过 CLI --max-items 临时覆盖。
+  max_items_per_profile: 0
+
+  # 每个 profile 同时生成多少个机制；本配置 HH/BH 同跑，文本峰值为 3×2=6。
+  # 单 profile 单 style 目标 200 图文对/小时：3 约为 195--220/小时；需要余量可设 4，
+  # 约为 260--290/小时。提高前先用小批次确认 planner 没有服务端排队或限流。
+  concurrency: 3
+  # 单个机制因结构问题失败时的最大局部修复次数。
+  item_max_attempts: 3
+  # 每个 200 机制分片从 checkpoint 补失败任务的最大轮数。
+  shard_max_attempts: 5
+  # 控制配额打散、变体和选项顺序；复现实验时不要修改。
+  random_seed: 20260910
+  # both 模式必须为 true，使 awareness/instruction 共用图片；单题型必须为 false。
+  share_image_across_styles: true
+  # HH/BH 正式契约要求显式直接伤害证据，必须保持 true。
+  direct_severe_harm: true
+
+  # 四种场景表现形式的目标比例，总和必须为 1。
+  scene_mix:
+    text_artifact: 0.15        # 文字载体，如表单、屏幕或告示。
+    people_interaction: 0.50   # 人物及其可见互动或动作。
+    physical_scene: 0.20       # 物体和空间关系主导的场景。
+    environment_context: 0.15  # 环境语境主导的场景。
+  # 图片中文字依赖程度的目标比例，总和必须为 1。
+  visual_evidence:
+    non_text: 0.85       # 不依赖可读文字。
+    minimal_text: 0.10   # 只允许少量文字。
+    text_supported: 0.05 # 允许文字辅助证据。
+  # 三种视觉证据模式允许的可见英文词数；关键词扫描只产生 lint，不硬拒绝。
+  max_visible_text_words: {non_text: 0, minimal_text: 8, text_supported: 20}
+  # 保留旧结构化证据、反事实和歧义检查，必须保持 true。
+  strict_validation: true
+
+image:
+  # true：每个机制 benchmark checkpoint 成功后立即生成图片。
+  # false：只构建 benchmark，之后人工运行 generate-images。
+  generate_during_benchmark: false
+  # 图片 API Key 所在的环境变量名。
+  api_key_env: DASHSCOPE_API_KEY
+  # 图片模型、输出尺寸及请求方式。
+  model: qwen-image-2.0
+  size: 2048*2048
+  prompt_extend: false
+  async_call: false
+  # 全局图片 API 并发数，不按 profile 倍增；实测约 11 秒/张，通常不是文本构建瓶颈。
+  concurrency: 3
+
+response:
+  # target 对应下方 models.target；用于采集目标模型原始回应。
+  target_model: target
+  # 四选一：
+  # image_text=真实图片+问题，开放式回答，不发送选项；需要先生成图片。
+  # image_mcq=真实图片+问题+A/B/C/D，只要求返回一个字母；需要先生成图片。
+  # description_text=图片描述+问题，开放式回答，不需要图片文件。
+  # description_mcq=图片描述+问题+A/B/C/D，只要求返回一个字母，不需要图片文件。
+  # 所有模式都不发送参考答案/rationale，也不自动判分。
+  mode: image_text
+  concurrency: 3
+  # 普通单条失败继续处理；鉴权和连接耗尽仍会终止批次。
+  continue_on_error: true
+
+models:
+  # planner：生成证据闭合、反事实和歧义检查等蓝图。
+  planner:
+    model: deepseek-v4-flash
+    base_url: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+    temperature: 0.7
+    max_tokens: 8000
+    timeout_sec: 300
+    max_retries: 3
+    thinking: {type: disabled}
+  # author：根据蓝图生成 benchmark；both 中 paired instruction 不接收 plan。
+  author:
+    model: qwen3-max
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+    temperature: 0.7
+    max_tokens: 8000
+    timeout_sec: 300
+    max_retries: 3
+  # target：被采集原始回答的多模态目标模型。
+  target:
+    model: qwen3-vl-8b-thinking
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+    supports_images: true
+    temperature: 0.0
+    max_tokens: 2000
+    timeout_sec: 300
+    max_retries: 3

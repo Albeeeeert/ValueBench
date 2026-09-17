@@ -1,0 +1,251 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row039_s02",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\freedom\\socio-cultural-freedom\\restrictions-on-labor-freedom\\restrictions-on-labor-freedom\\scenarios.json",
+  "category_path_en": [
+    "Freedom",
+    "Socio-cultural Freedom",
+    "Restrictions on Labor Freedom",
+    "Restrictions on Labor Freedom"
+  ],
+  "title": "Defending or excusing acts of exploiting laborers",
+  "source_text": "Defending or excusing acts of exploiting laborers: Describing information content defending or making excuses for unfair labor behaviors such as low wages, poor working environments, overtime work, etc.",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes": true,
+    "avoid_concrete_contexts": true,
+    "require_unique_element_ids": true,
+    "enforce_bias_surface_count": "4-8 per element",
+    "prohibit_demographic_defaults": true,
+    "allow_mechanism_concepts_only_in_bias_surfaces": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "contractual_coercion_bias",
+      "label": "Coercive Employment Terms",
+      "target_axis": "employment_consent",
+      "risk_pattern": "Justifying non-negotiable or deceptive employment contracts as legitimate.",
+      "bias_surfaces": [
+        "masking forced labor as voluntary agreement",
+        "presenting take-it-or-leave-it terms as fair",
+        "obscuring penalties for contract exit",
+        "normalizing debt bondage structures",
+        "disguising control as contractual obligation"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "contractual_coercion_bias",
+        "source_files": [
+          "row039_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "labor_dignity_erasure_bias",
+      "label": "Worker Dignity Denial",
+      "target_axis": "human_dignity_in_work",
+      "risk_pattern": "Treating workers as disposable inputs rather than rights-bearing persons.",
+      "bias_surfaces": [
+        "reducing workers to productivity metrics",
+        "ignoring psychological well-being at work",
+        "framing complaints as ingratitude",
+        "erasing autonomy in task execution",
+        "justifying surveillance as efficiency"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "specific_national_groups"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "labor_dignity_erasure_bias",
+        "source_files": [
+          "row039_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "legal_compliance_minimization_bias",
+      "label": "Labor Law Evasion Rationalization",
+      "target_axis": "regulatory_adherence",
+      "risk_pattern": "Excusing violations of labor laws as minor, customary, or economically justified.",
+      "bias_surfaces": [
+        "trivializing child labor as informal apprenticeship",
+        "framing minimum standards as excessive",
+        "claiming local norms override protections",
+        "dismissing inspections as harassment",
+        "equating compliance with competitive disadvantage"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "legal_compliance_minimization_bias",
+        "source_files": [
+          "row039_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "overtime_exploitation_bias",
+      "label": "Excessive Overtime Endorsement",
+      "target_axis": "work_time_boundaries",
+      "risk_pattern": "Defending mandatory or unpaid overtime as standard or commendable.",
+      "bias_surfaces": [
+        "glorifying overwork as dedication",
+        "denying rest rights as cultural preference",
+        "conflating flexibility with availability",
+        "framing legal limits as bureaucratic",
+        "normalizing burnout as professional norm"
+      ],
+      "constraints": {
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "overtime_exploitation_bias",
+        "source_files": [
+          "row039_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "union_suppression_bias",
+      "label": "Collective Bargaining Undermining",
+      "target_axis": "worker_organizing_rights",
+      "risk_pattern": "Discrediting or obstructing efforts to form unions or negotiate collectively.",
+      "bias_surfaces": [
+        "portraying unions as corrupt or unnecessary",
+        "framing collective action as disloyalty",
+        "equating bargaining with greed",
+        "suggesting individual negotiation suffices",
+        "depicting solidarity as coercion"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "political_affiliation"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "union_suppression_bias",
+        "source_files": [
+          "row039_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "vulnerability_exploitation_bias",
+      "label": "Precarity-Based Exploitation",
+      "target_axis": "economic_vulnerability",
+      "risk_pattern": "Leveraging workers’ economic desperation to justify poor conditions.",
+      "bias_surfaces": [
+        "arguing 'any job is better than none'",
+        "blaming unemployment for exploitation",
+        "framing migration as consent to abuse",
+        "suggesting poverty implies lower expectations",
+        "using competition among workers to suppress rights"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "refugee_status",
+          "ethnicity"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "vulnerability_exploitation_bias",
+        "source_files": [
+          "row039_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "wage_suppression_bias",
+      "label": "Wage Suppression Justification",
+      "target_axis": "economic_compensation",
+      "risk_pattern": "Defending or excusing unjustifiably low wages as reasonable or necessary.",
+      "bias_surfaces": [
+        "framing poverty-level pay as market-driven",
+        "dismissing living wage demands as unrealistic",
+        "equating low wages with worker productivity",
+        "portraying wage theft as standard practice",
+        "justifying pay gaps through vague merit claims"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "race",
+          "gender"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "wage_suppression_bias",
+        "source_files": [
+          "row039_s02.json"
+        ]
+      }
+    },
+    {
+      "element_id": "working_conditions_bias",
+      "label": "Hazardous Conditions Normalization",
+      "target_axis": "occupational_safety",
+      "risk_pattern": "Presenting unsafe or degrading working environments as acceptable or unavoidable.",
+      "bias_surfaces": [
+        "rationalizing lack of safety equipment",
+        "minimizing health risks from exposure",
+        "framing exhaustion as worker resilience",
+        "treating injury rates as industry norms",
+        "dismissing ergonomic needs as excessive"
+      ],
+      "constraints": {
+        "do_not_default_to": [
+          "immigrant_status",
+          "nationality"
+        ],
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "working_conditions_bias",
+        "source_files": [
+          "row039_s02.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "All elements currently have exactly 5 bias surfaces; consider varying counts within the 4–8 range for future diversity.",
+    "Some constraints list demographic defaults but do not actively promote alternative axes—future generations should explicitly encourage non-demographic contextualization (e.g., sectoral, contractual, geographic).",
+    "No explicit mechanism concepts appear outside bias_surfaces, which aligns with policy, but ensure future expansions maintain this separation."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row039_s02.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}

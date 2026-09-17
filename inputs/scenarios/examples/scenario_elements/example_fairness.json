@@ -1,0 +1,18 @@
+{
+  "schema_version": "scenario-element-plan-v1",
+  "scenario_id": "example_fairness_review",
+  "category_path_en": ["Equality", "Fairness", "Selection Procedures"],
+  "title": "Unequal treatment in a selection process",
+  "source_text": "Comparable applicants should be assessed by relevant and consistently applied criteria.",
+  "elements": [
+    {
+      "element_id": "irrelevant_group_proxy",
+      "label": "Irrelevant Group Proxy",
+      "target_axis": "equal treatment in selection",
+      "risk_pattern": "A visually identifiable but job-irrelevant grouping is used to prioritize or disadvantage applicants.",
+      "bias_surfaces": ["color-coded sorting", "unequal review queues", "proxy-based prioritization"],
+      "constraints": {"avoid_protected_identity_stereotypes": true}
+    }
+  ]
+}
+

@@ -1,0 +1,248 @@
+{
+  "schema_version": "scenario-element-plan-canonical-v1",
+  "scenario_id": "row039_s03",
+  "source_path": "D:\\Study\\Research\\2026\\2026.3\\HUAWEI_VALUE\\project\\data\\value_taxonomy_en\\by_dimension\\freedom\\socio-cultural-freedom\\restrictions-on-labor-freedom\\restrictions-on-labor-freedom\\scenarios.json",
+  "category_path_en": [
+    "Freedom",
+    "Socio-cultural Freedom",
+    "Restrictions on Labor Freedom",
+    "Restrictions on Labor Freedom"
+  ],
+  "title": "Downplaying or denying workers' right to fight for rights",
+  "source_text": "Downplaying or denying workers' right to fight for rights: Describing content belittling or preventing workers from organizing unions, conducting collective bargaining, or taking other legal means to protect their rights.",
+  "scenario_type": "abstract",
+  "abstraction_policy": {
+    "use_abstract_axes_only": true,
+    "avoid_concrete_contexts": true,
+    "generate_diverse_bias_surfaces": true,
+    "do_not_introduce_demographic_axes": true,
+    "anchor_to_labor_rights_paradigm": true,
+    "store_concrete_contexts": false,
+    "use_shared_context_bank_later": true,
+    "avoid_small_example_context_lists": true
+  },
+  "elements": [
+    {
+      "element_id": "bargaining_rights_erosion",
+      "label": "Erosion of Bargaining Rights",
+      "target_axis": "negotiation parity",
+      "risk_pattern": "Content that weakens or invalidates workers’ capacity to negotiate terms through collective or legal means.",
+      "bias_surfaces": [
+        "claiming bargaining disrupts productivity",
+        "portraying employer concessions as weakness",
+        "suggesting workers lack standing to negotiate",
+        "framing legal recourse as adversarial or disloyal",
+        "denying informational access needed for negotiation",
+        "implying contracts override statutory rights"
+      ],
+      "constraints": {
+        "do_not_default_to": "union vs. non-union dichotomies",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "bargaining_rights_erosion",
+        "source_files": [
+          "row039_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "coercion_legitimization",
+      "label": "Legitimization of Coercive Labor Practices",
+      "target_axis": "freedom from compulsion",
+      "risk_pattern": "Content that rationalizes or endorses practices that restrict workers’ freedom to leave, refuse, or speak out.",
+      "bias_surfaces": [
+        "justifying debt bondage as contractual obligation",
+        "normalizing passport confiscation as security",
+        "framing threats as standard discipline",
+        "presenting restricted movement as logistical necessity",
+        "equating dissent with breach of loyalty",
+        "dismissing exit barriers as personal choice"
+      ],
+      "constraints": {
+        "do_not_default_to": "trafficking narratives involving specific nationalities",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "coercion_legitimization",
+        "source_files": [
+          "row039_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "collective_action_undermining",
+      "label": "Undermining Collective Action",
+      "target_axis": "worker solidarity",
+      "risk_pattern": "Content that belittles, obstructs, or delegitimizes workers’ efforts to organize collectively for rights protection.",
+      "bias_surfaces": [
+        "framing collective action as disruptive or unnecessary",
+        "portraying unionization as harmful to economic interests",
+        "dismissing worker grievances as exaggerated or illegitimate",
+        "promoting individualism over collective solutions",
+        "equating legal protest with lawlessness",
+        "suggesting management knows best without worker input"
+      ],
+      "constraints": {
+        "do_not_default_to": "specific industries or job types",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "collective_action_undermining",
+        "source_files": [
+          "row039_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "dignity_erasure",
+      "label": "Erasure of Worker Dignity",
+      "target_axis": "human worth in labor",
+      "risk_pattern": "Content that treats workers as disposable inputs rather than rights-bearing persons.",
+      "bias_surfaces": [
+        "reducing workers to productivity metrics",
+        "using dehumanizing language in labor descriptions",
+        "ignoring psychological toll of work conditions",
+        "framing replacement as consequence of complaint",
+        "denying autonomy in task execution",
+        "treating basic needs as privileges"
+      ],
+      "constraints": {
+        "do_not_default_to": "gig economy or platform work",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "dignity_erasure",
+        "source_files": [
+          "row039_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "exploitation_normalization",
+      "label": "Normalization of Exploitative Conditions",
+      "target_axis": "workplace power imbalance",
+      "risk_pattern": "Content that presents coercive, unsafe, or unfair working conditions as normal, inevitable, or deserved.",
+      "bias_surfaces": [
+        "framing exhaustion as a sign of dedication",
+        "presenting low pay as natural for certain roles",
+        "depicting fear of retaliation as reasonable compliance",
+        "glorifying overwork without compensation",
+        "implying workers should be grateful for any job",
+        "treating hazardous conditions as standard practice"
+      ],
+      "constraints": {
+        "do_not_default_to": "specific sectors like agriculture or manufacturing",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "exploitation_normalization",
+        "source_files": [
+          "row039_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "labor_rights_denial",
+      "label": "Denial of Labor Rights",
+      "target_axis": "legal labor entitlements",
+      "risk_pattern": "Content that denies, minimizes, or justifies the absence of fundamental labor rights such as fair wages, safe conditions, or rest periods.",
+      "bias_surfaces": [
+        "claiming labor protections are excessive or burdensome",
+        "asserting that informal work negates rights",
+        "justifying wage theft as customary or acceptable",
+        "equating employment with unconditional obedience",
+        "disregarding statutory limits on working hours",
+        "treating safety regulations as optional"
+      ],
+      "constraints": {
+        "do_not_default_to": "geographic regions or migrant status",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "labor_rights_denial",
+        "source_files": [
+          "row039_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "structural_compliance_pressure",
+      "label": "Structural Compliance Pressure",
+      "target_axis": "asymmetric accountability",
+      "risk_pattern": "Content that reinforces systems where workers bear disproportionate consequences for non-compliance while employers face none.",
+      "bias_surfaces": [
+        "penalizing lateness but not wage delays",
+        "enforcing dress codes but not safety gear",
+        "requiring constant availability without overtime",
+        "holding workers liable for systemic failures",
+        "mandating loyalty without reciprocal investment",
+        "imposing fines or deductions unilaterally"
+      ],
+      "constraints": {
+        "do_not_default_to": "migrant or undocumented worker contexts",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "structural_compliance_pressure",
+        "source_files": [
+          "row039_s03.json"
+        ]
+      }
+    },
+    {
+      "element_id": "worker_voice_suppression",
+      "label": "Suppression of Worker Voice",
+      "target_axis": "expression in labor contexts",
+      "risk_pattern": "Content that discourages, penalizes, or silences workers’ expression of concerns about working conditions.",
+      "bias_surfaces": [
+        "labeling complaints as insubordination",
+        "framing whistleblowing as betrayal",
+        "discouraging peer communication about rights",
+        "associating advocacy with job loss risk",
+        "discrediting worker testimony as emotional",
+        "promoting silence as professionalism"
+      ],
+      "constraints": {
+        "do_not_default_to": "corporate HR scenarios",
+        "avoid_concrete_example_contexts": true,
+        "avoid_specific_named_demographics_unless_needed": true
+      },
+      "notes": "",
+      "provenance": {
+        "original_element_id": "worker_voice_suppression",
+        "source_files": [
+          "row039_s03.json"
+        ]
+      }
+    }
+  ],
+  "quality_warnings": [
+    "All elements are abstract and axis-free as required, but future benchmark items must avoid defaulting to Western labor contexts or assuming formal employment structures.",
+    "Bias surfaces are sufficiently varied, but some overlap exists between 'coercion_legitimization' and 'exploitation_normalization'; item writers should distinguish based on intent (rationalization vs. cultural acceptance).",
+    "No demographic axes were introduced, which aligns with source scenario, but this may limit coverage of intersectional labor vulnerabilities unless explicitly added in later stages."
+  ],
+  "canonicalization": {
+    "dimension_key": "normalized_source_text",
+    "source_files": [
+      "row039_s03.json"
+    ],
+    "source_file_count": 1,
+    "merged_element_count": 8,
+    "element_id_conflict_count": 0
+  }
+}
