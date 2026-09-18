@@ -32,6 +32,10 @@ tests                       离线单元测试与端到端测试
 | `image_generation/` | 图片任务去重、请求、文件校验和恢复 |
 | `response_collection/` | 构造目标请求并保存模型原始回应 |
 | `augmentation/` | 筛选 HH-instruction，执行独立方法模块，保存增强样本和完整数据集清单 |
+| `augmentation/registry.py` / `base.py` | 注册 11 种方法，定义源题、生成结果及方法接口 |
+| `augmentation/runner.py` | 原图关联、方法写锁、源题级 checkpoint、样本发布和完整数据集索引 |
+| `augmentation/common.py` / `auxiliary.py` | 共享排版、准备缓存、辅助模型连接匹配与重试回退 |
+| `augmentation/methods/<name>/` | 方法实现、独立配置、提示词和本地算法组件 |
 | `pipeline.py` | 跨阶段编排和总运行 manifest |
 | `cli.py` | 唯一用户入口 |
 
@@ -70,6 +74,23 @@ element 可以循环复用，但 `(scenario_id, element_id, variant_index)` 构�
 索引同时进入 benchmark ID、共享图片 ID、随机种子和 checkpoint 指纹。配额在完整 job 集合
 上分配后再切 shard；值为 0 时保留旧的 element-once 数据流。
 
+## 增强模块
+
+`AugmentationSource` 提供完整源题、来源路径及可选原图；`AugmentationResult` 返回目标
+文本、一个或多个图片路径和 metadata。方法只在自己的输出目录写入图片，执行器统一
+校验后生成 `value-eval-augmentation-v1` 样本，不改写原始 BenchmarkItem。
+
+当前注册 FigStep、QR、CAMO、MML_WR、MML_Mirror、MML_Rotate、HIMRD、CS-DJ、
+VisualRoleplay、SI 和 VisCRA。方法按列表顺序执行，方法内独立并发。
+QR、CAMO、HIMRD、SI、VisCRA 需要原图；七种方法使用统一辅助文本客户端。
+CS-DJ 的 CLIP 检索和 VisCRA 的注意力计算使用本地模型；VisualRoleplay 复用当前生图
+后端生成角色图。方法与资源的逐项对应见 [增强文档](docs/AUGMENTATION.md)。
+
+辅助请求和角色图在 `preparation/` 缓存，CS-DJ 向量在 `resources/` 缓存，最终增强
+输入发布到 `samples.jsonl`。`dataset/manifest.json` 仅索引原始集和当前启用方法。
+回应模块按 `response.datasets` 选择输入，增强仅支持 `image_text`，并在采集前检查
+方法指纹、完整源题覆盖与文件完整性。
+
 ## 稳定性与恢复
 
 场景指纹包含 Excel 内容、schema 版本、模型公开参数、prompt、关键代码和构建参数，
@@ -77,8 +98,9 @@ element 可以循环复用，但 `(scenario_id, element_id, variant_index)` 构�
 错误复用旧结果。
 
 `image_backend: api | local` 分别选择 `image` 和 `local_image`，两组配置共存。
-本地后端通过 Diffusers 延迟加载模型，任务共享模型和推理锁，阶段结束释放资源；API 模式
-不依赖 PyTorch。图片 manifest 记录所选后端的生成参数指纹，本地任务另记录实际 seed。
+本地后端通过 Diffusers 延迟加载模型，任务共享模型和推理锁，阶段结束释放资源；API 生图
+本身不执行 PyTorch 推理，启用 CS-DJ 或 VisCRA 仍需本地模型。图片 manifest 记录所选
+后端的生成参数指纹，本地任务另记录实际 seed。
 
 图片生成可通过所选后端的 `generate_during_benchmark` 流式开启。流式任务与文本生成使用独立
 线程池，按 `shared_image_id` 去重，并沿用人工 images 阶段的 manifest、文件校验和恢复逻辑。
@@ -89,10 +111,19 @@ benchmark 完成后会补扫整个 benchmark 根目录，故中途失败或进�
 所有 JSON checkpoint 使用同目录临时文件和原子替换。回应逐条追加 JSONL 并执行 `fsync`。
 场景必须完成全量结构校验后才发布到 `scenario_preparation/scenario_elements/`。
 
+增强用方法指纹与源题内容联合恢复，依赖原图时加入原图 SHA256。方法级写锁防止同一
+输出目录被并发改写。`--force` 重建所选最终条目，独立准备缓存仍按指纹判断是否复用；
+方法并发数不影响指纹。当前每种方法每条源题输出一个样本，完整集数量为原始数量加
+HH-instruction 数量乘已启用方法数。
+
 ## 数据边界
 
 目标模型只收到图片或图片描述、问题以及 MCQ 模式下的选项。正确答案、rationale、风险
 profile、taxonomy 和生成 trace 不会进入目标请求。回应阶段不解析选项，也不生成分数。
 
-所有持久化路径使用相对路径；配置加载时可以解析绝对路径，但不会把项目所在服务器的
-绝对目录写入预置数据清单。
+增强目标请求只使用样本的 `input.text` 与 `input.images`，完整源题留在 `source`，
+转换记录留在 `metadata`。`source_benchmark_id` 用于将各方法的原始回应与源题配对。
+
+样本图片与 benchmark 来源路径使用相对路径，预置场景清单不依赖项目部署位置。
+本地模型和外部图库路径属于部署配置，增强快照与 metadata 中可能保存其绝对路径；
+迁移机器时需调整这些资源路径，详见 [部署说明](docs/DEPLOYMENT.md)。

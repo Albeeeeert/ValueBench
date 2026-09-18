@@ -4,10 +4,10 @@
 开始构建场景，也支持直接使用已准备好的场景数据集，随后执行严格 HH/BH Plan-Game 单生成器、
 图片生成和目标模型原始回应采集。项目不包含 judge、自动评分或答案判定。
 
-支持可选的 HH-instruction 增强：主配置使用 `augmentation.enabled` 和
-`augmentation.method: [figstep]`，方法参数放在各自模块目录。generation 仍可生成四类，
-增强只处理 HH-instruction；缺少该类时开启增强会报错。已有 benchmark 可通过
-`generate-augmentations` 独立补做。详见 [数据增强](docs/AUGMENTATION.md)，验证配置见
+支持 11 种可选的越狱增强方法：FigStep、QR、CAMO、MML_WR、MML_Mirror、MML_Rotate、
+HIMRD、CS-DJ、VisualRoleplay、SI 和 VisCRA。增强只处理 HH-instruction，原始四类数据
+仍按 generation 配置生成。已有 benchmark 可通过 `generate-augmentations` 独立补做。
+方法说明见 [数据增强](docs/AUGMENTATION.md)，完整验证入口沿用
 [excel_to_benchmark_figstep_check.yaml](configs/excel_to_benchmark_figstep_check.yaml)。
 
 完整链路如下：
@@ -20,7 +20,10 @@
 
 代码边界见 [ARCHITECTURE.md](ARCHITECTURE.md)，配置字段见
 [docs/CONFIGURATION.md](docs/CONFIGURATION.md)，Excel 规范见
-[docs/EXCEL_INPUT.md](docs/EXCEL_INPUT.md)。
+[docs/EXCEL_INPUT.md](docs/EXCEL_INPUT.md)。阶段时序与恢复规则见
+[docs/PIPELINE.md](docs/PIPELINE.md)，产物字段见 [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md)，
+部署和排错分别见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) 与
+[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)。
 
 ## 环境准备
 
@@ -57,7 +60,7 @@ value-eval --help
 | `hh_bh_4000.yaml` | 使用固定 1000 个机制严格复现 HH/BH 旧 4000 基准；也可作为扩增实验起点。 |
 | `prepared_scenarios.yaml` | 已有 `scenario_elements` 和 manifest 时使用；默认是两个场景的小样本模板。 |
 | `excel_to_benchmark.yaml` | 从中文 Excel 构建场景，再生成 benchmark、图片和原始回应。 |
-| `excel_to_benchmark_figstep_check.yaml` | 沿用现有文件，验证四类原题、11 种增强和回应采集。 |
+| `excel_to_benchmark_figstep_check.yaml` | 四类原题、11 种增强和回应采集的小样本模板；当前使用 API 生成 2048×2048 图片。 |
 
 运行时始终通过 `--config` 明确选择；省略时默认使用 `prepared_scenarios.yaml`。
 
@@ -87,8 +90,8 @@ bash scripts/run_pipeline.sh
 和各阶段命令均读取此选项，详细字段和旧 run 迁移方式见
 [配置说明](docs/CONFIGURATION.md#image_backendimage-和-local_image)。
 
-只需要 benchmark 和图片时，将配置中的 `response.enabled` 改为 `false`，一键脚本会在
-图片生成完成后结束，跳过目标模型回答采集。该开关默认 `true`。
+只需要数据产物时，将配置中的 `response.enabled` 改为 `false`，一键脚本会在
+图片及已启用的增强生成完成后结束，跳过目标模型回答采集。该开关默认 `true`。
 
 ## 第一步：Excel 生成场景文件
 
@@ -472,7 +475,87 @@ outputs/<execution_run_id>/images/<profile>/
 注意：即时图片模式会在最终跨分片重复校验前产生图片请求。如果 benchmark 最终失败，已经
 发生的图片 API 费用不会回滚；因此正式大批量运行通常建议采用方式 A。
 
+## 第四步（可选）：HH-instruction 越狱增强
+
+### 选择方法和准备依赖
+
+在生成 benchmark 使用的同一份 YAML 中添加：
+
+```yaml
+augmentation:
+  enabled: true
+  method: [figstep, qr, camo, mml_wr, mml_mirror, mml_rotate, himrd, cs_dj, visual_roleplay, si, viscra]
+
+response:
+  enabled: true
+  mode: image_text
+  datasets: [base, enabled_augmentations]
+```
+
+`method` 是方法名列表，删除某一项即可关闭该方法。主配置的 `augmentation` 块只接受 `enabled` 和 `method`，
+字号、辅助模型和本地资源路径在 `value_eval/augmentation/methods/<method>/config.yaml`
+中修改。`run-all` 要求 `generation.profiles` 包含 `hh`、`generation.styles` 包含
+`instruction`；可以继续生成 HH/BH × awareness/instruction 四类原题。
+
+| 方法名 | 处理方式 | 需要原 HH 图 | 额外准备 |
+| --- | --- | --- | --- |
+| `figstep` | 问题和空编号排成文字图 | 否 | 无 |
+| `qr` | 原图底部添加关键词，改写文本问题 | 是 | 辅助文本 API |
+| `camo` | 文本遮字、算术线索与图片字符索引 | 是 | 辅助文本 API |
+| `mml_wr` | 词语替换后排版，保留还原字典 | 否 | NLTK 英文词性标注数据 |
+| `mml_mirror` | 问题文字图水平镜像 | 否 | 无 |
+| `mml_rotate` | 问题文字图旋转 180° | 否 | 无 |
+| `himrd` | 将问题片段移到原图顶部，文本保留占位符 | 是 | 辅助文本 API |
+| `cs_dj` | 9 张干扰图与 3 张子问题图拼成一张图 | 否 | 辅助文本 API、本地 CLIP 和干扰图库 |
+| `visual_roleplay` | 角色文字、额外生成的角色图与原问题拼接 | 否 | 辅助文本 API、当前生图后端 |
+| `si` | 打乱原图图块及问题词序，底部添加关键词 | 是 | 辅助文本 API |
+| `viscra` | 注意力定位遮挡区域，底部添加关键词 | 是 | 辅助文本 API、本地 Qwen2.5-VL |
+
+统一依赖使用 `requirements.txt`；MML_WR 另需安装
+`averaged_perceptron_tagger_eng`，CS-DJ 和 VisCRA 需在各自方法配置中填写当前机器的
+资源路径。辅助 API 默认使用 `qwen3.5-35b-a3b`，失败后回退 `deepseek-v4-flash`，
+继承主配置中的服务连接。详细参数与资源准备见 [增强文档](docs/AUGMENTATION.md)
+和 [部署说明](docs/DEPLOYMENT.md)。
+
+### 预检和小样本生成
+
+以下命令使用已有验证 run；如果 benchmark 来自其他配置，将路径替换为该配置。
+分阶段命令必须保持相同 `run.id` 和 `--style`，单 instruction run 使用 `--style instruction`。
+
+```bash
+# 检查所有启用方法的源题、原图及本地配置，不调用模型。
+python -m value_eval generate-augmentations \
+  --config configs/excel_to_benchmark_figstep_check.yaml --style both --dry-run
+
+# 先为一条 HH-instruction 生成 FigStep 和 QR。
+python -m value_eval generate-augmentations \
+  --config configs/excel_to_benchmark_figstep_check.yaml --style both \
+  --method figstep --method qr --max-items 1
+
+# 为全部 HH-instruction 补齐所有已启用方法。
+python -m value_eval generate-augmentations \
+  --config configs/excel_to_benchmark_figstep_check.yaml --style both
+```
+
+`--method` 只能选择主配置中已启用的方法，可以重复传入。`--max-items` 按源题数限制；
+未覆盖全部源题时方法状态为 `partial`，需要去掉限制补齐后才能采集该方法的回应。
+独立预检不加载模型权重，也不验证 API 可用性；通过后仍需做小样本运行。
+
+### 数量与输出
+
+当前每种方法为每条 HH-instruction 生成一条增强样本。原始集 N 条、HH-instruction H 条、
+启用 M 种方法时，全部成功后的完整集为 `N + H × M` 条。验证配置每个 profile 最多
+4 条，生成满额时为 8 条原题、2 条 HH-instruction，全部 11 种增强后为 `8 + 2 × 11 = 30` 条。
+
+增强写入 `augmentations/<method>/`，完整集索引写入 `dataset/manifest.json`；原 benchmark
+不被改写。中断后重跑相同命令会复用已完成条目。对已有 run 仅添加增强时使用独立命令，
+因为重新执行 benchmark 或 `run-all` 仍会检查主 YAML 的 checkpoint 指纹。
+
 ## 可选：采集目标模型回应
+
+原始集支持下面四种回应模式；11 种增强集均只支持 `image_text`。默认
+`response.datasets: [base, enabled_augmentations]` 采集原题和全部已启用增强；只采集原题
+可设置 `[base]`，只采集指定增强可设置 `[qr, si]`。
 
 回应采集同时支持开放式和 MCQ。`generation.styles` 决定 benchmark 是 awareness、instruction
 还是 both；`response.mode` 独立决定发送真实图片还是图片描述，以及要求开放回答还是选项字母。
@@ -524,13 +607,15 @@ python -m value_eval collect-responses \
   --config "$CONFIG" \
   --style both \
   --response-mode image_text \
+  --dataset base \
   --max-items 1
 
-# MCQ：发送图片、question 和 A/B/C/D，要求返回一个选项字母。
+# MCQ：只选择原始集，发送图片、question 和 A/B/C/D。
 python -m value_eval collect-responses \
   --config "$CONFIG" \
   --style both \
   --response-mode image_mcq \
+  --dataset base \
   --max-items 1
 ```
 
@@ -553,6 +638,19 @@ tail -f "logs/${RUN_ID}/pipeline.log"
 `response`、`reasoning_content`、usage、耗时和 request ID，不运行 judge 或自动评分。不同
 mode 使用不同子目录，因此可对同一 benchmark 分别采集开放式和 MCQ 回应。
 
+增强完成后可单独采集回应：
+
+```bash
+python -m value_eval collect-responses \
+  --config configs/excel_to_benchmark_figstep_check.yaml --style both \
+  --response-mode image_text --dataset enabled_augmentations
+```
+
+重复 `--dataset` 可选择多个方法，例如 `--dataset qr --dataset si`。目标请求使用增强样本
+的 `input.text` 和 `input.images`；原题答案、选项与风险审计留在来源记录中。
+增强回应单独写入 `responses/<target>/image_text/augmentations/<method>.jsonl`，可通过
+`source_benchmark_id` 与原题回应配对。
+
 ## 一次运行完整流程
 
 配置全部确认后可以运行：
@@ -563,9 +661,14 @@ python -m value_eval run-all --config configs/excel_to_benchmark.yaml --style bo
 
 # 从 prepared 场景开始
 python -m value_eval run-all --config configs/prepared_scenarios.yaml --style both
+
+# 从 Excel 开始，生成四类原题、全部 11 种增强并采集原始回应。
+python -m value_eval run-all --config configs/excel_to_benchmark_figstep_check.yaml --style both
 ```
 
-首次运行仍建议按照前三步分阶段执行，以便在开始图片计费前人工检查 benchmark。
+首次运行建议按上述步骤分阶段执行，先检查 benchmark，再确认图片与增强产物。
+启用增强时，`run-all` 按“benchmark → 图片 → 增强 → 回应”执行；
+`response.enabled: false` 只跳过最后的回应阶段。
 
 ## 常用控制参数
 
@@ -574,7 +677,9 @@ python -m value_eval run-all --config configs/prepared_scenarios.yaml --style bo
 | `--dry-run` | 只检查输入和配置，不发请求 |
 | `--style MODE` | benchmark 题型：`both`、`awareness` 或 `instruction` |
 | `--response-mode MODE` | 临时覆盖回应模式：`image_text`、`image_mcq`、`description_text` 或 `description_mcq` |
-| `--max-items N` | 限制 benchmark、图片或回应条数；仅 `both` benchmark 要求偶数 |
+| `--method NAME` | 仅用于 `generate-augmentations`；选择已启用方法，可重复传入 |
+| `--dataset NAME` | 用于 `collect-responses` / `run-all`；选择 `base`、`enabled_augmentations` 或已启用方法，可重复传入 |
+| `--max-items N` | 限制当前阶段数量；独立增强按 HH-instruction 源题数，回应按所选集的总样本数；`both` benchmark 要求偶数 |
 | `--variants-per-scenario N` | 覆盖每个场景的独立生成变体数；0 保持 element-once 模式 |
 | `--force` | 忽略对应阶段 checkpoint 并重新生成 |
 | `--retry-fallbacks` | 重试此前因模型错误而降级的场景 |
@@ -599,7 +704,17 @@ outputs/<execution_run_id>/
 ├── images/<profile>/
 │   ├── files/
 │   └── manifest.json
-└── responses/<target>/<mode>/<profile>.jsonl
+├── augmentations/<method>/
+│   ├── images/<sample_id>.png
+│   ├── preparation/                 # 辅助文本、角色图等中间结果，按需生成
+│   ├── resources/                   # CS-DJ 的 CLIP 向量缓存
+│   ├── samples.jsonl
+│   ├── manifest.json
+│   └── config.snapshot.yaml
+├── dataset/manifest.json            # 原始集与当前启用增强集的索引
+└── responses/<target>/<mode>/
+    ├── <profile>.jsonl
+    └── augmentations/<method>.jsonl
 ```
 
 只有完整 HH/BH、双风格的 4000 条正式产物使用兼容文件名 `benchmark_4000.json`；单风格和

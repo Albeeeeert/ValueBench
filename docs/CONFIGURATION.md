@@ -1,18 +1,12 @@
 # 配置字段手册
 
-可选增强使用 `augmentation: {enabled: true, method: [figstep]}`，方法参数位于
-`value_eval/augmentation/methods/<name>/config.yaml`。增强范围固定为实际生成的
-HH-instruction，generation 可包含全部四类。`response.datasets` 选择回应子集。
-详见 [增强配置与独立命令](AUGMENTATION.md)。
+主配置管理场景、benchmark、图片、增强和回应阶段。11 种增强的方法参数分别位于
+`value_eval/augmentation/methods/<name>/config.yaml`，操作步骤见
+[增强配置与独立命令](AUGMENTATION.md)。
 
-当前支持 `figstep`、`qr`、`camo`、`mml_wr`、`mml_mirror`、`mml_rotate`、`himrd`、
-`cs_dj`、`visual_roleplay`、`si`、`viscra`。从 `method` 列表移除即可关闭单个方法。
-各方法的 `auxiliary` 配置默认使用 Qwen3.5-35B-A3B（温度 1.0），失败重试 3 次后
-回退 DeepSeek-V4-Flash；默认 `enable_thinking: true`，两个模型均开启思考并使用流式响应，
-只将最终回答交给增强方法。URL、密钥环境变量继承当前主配置。VisualRoleplay 的额外角色图
-使用当前 `image_backend`，无需重复配置生图模型。
-
-所有相对路径均以 `run.root` 指向的项目根目录解析。密钥字段只填写环境变量名。
+主配置中的相对路径以 `run.root` 指向的项目根目录解析。增强字体路径相对方法配置目录；
+CS-DJ 的 `src_dir` 相对 `run.root`，`clip_path` 和 VisCRA 的 `attention_model_path`
+由加载器直接使用，建议填写当前机器的绝对路径。密钥字段只填写环境变量名。
 
 ## run
 
@@ -177,14 +171,92 @@ YAML 文件哈希，修改配置后对旧 run 执行 `run-all` 可能触发指�
 manifest 并重新生成。由于图片请求早于最终跨 shard 全局重复检查，后续校验失败时可能已经
 产生无法继续使用的图片 API 费用。
 
+## augmentation
+
+```yaml
+augmentation:
+  enabled: true
+  method: [figstep, qr, camo, mml_wr, mml_mirror, mml_rotate, himrd, cs_dj, visual_roleplay, si, viscra]
+```
+
+| 字段 | 默认值 | 说明 |
+| --- | --- | --- |
+| `enabled` | `false` | 增强总开关，必须为布尔值 |
+| `method` | `[]` | 已注册方法名的列表，不允许重复；列表顺序也是执行顺序 |
+
+主 `augmentation` 块不接受其他字段。关闭总开关或使用空列表时，`run-all` 跳过增强，
+默认回应数据集只保留 `base`；方法名即使在关闭状态也必须合法。
+启用时 `run-all` 要求 generation 包含 HH-instruction，其他三类原题可以继续生成。
+独立 `generate-augmentations --method NAME` 只从已启用列表中选择，不会自动启用方法。
+
+### 方法配置
+
+每个方法配置包含 `name`、`version`、`runtime` 和 `parameters`，使用辅助模型的方法
+另有 `auxiliary`。默认并发：FigStep 为 8，CS-DJ、VisualRoleplay、VisCRA 为 1，其余为 4。
+方法顺序执行，`runtime.concurrency` 是当前方法的源题级并发，必须为正整数。
+
+| 方法 | 常用参数与当前默认值 |
+| --- | --- |
+| `figstep` | `image_width/image_height: 760`、`font_size: 18`、`min_font_size: 10`、`auto_fit: true`、`steps: 3` |
+| `qr` | `reference_width: 512`、`font_size: 48`、`padding: 16`、`spacing: 8` |
+| `camo` | `character_masking_ratio: 0.4`、`mask_character: _`、`reference_width: 512`、`allow_height_expansion: true` |
+| `mml_wr` | 760×760、字号 18–10、`steps: 3`、`seed: 42`、`max_token_changes: 15` |
+| `mml_mirror` / `mml_rotate` | 760×760、字号 18–10、`steps: 3`、`seed: 42` |
+| `himrd` | `reference_width: 768`、`font_size: 34`、`padding: 32`、`spacing: 8` |
+| `cs_dj` | `src_dir`、`clip_path`、`device: cuda`、`num_images: 200`、`max_pairs_per_question: 9`、`tile_size: 500`、`images_per_row: 3` |
+| `visual_roleplay` | `reference_width: 1024`、`role_font_size: 30`、`request_font_size: 34`、`padding: 44` |
+| `si` | QR 同类文字条参数，另有 `blocks_per_side: 2`、`shuffle_prompt: true`、`seed: 42` |
+| `viscra` | `attention_model_path`、`device: cuda`、`attention_layer: 18`、`attention_stride: 1`、`mask_color: green` |
+
+`font_path` 相对方法配置目录：FigStep 使用自身 `assets/fonts/ARIAL.TTF`，其他方法
+使用共享 `../../assets/fonts/ARIAL.TTF`。面板类方法的字号、留白和间距随实际图宽相对
+`reference_width` 缩放；FigStep 和 MML 的固定文字画布不随原图变化。
+
+CS-DJ 固定需要 9 张干扰图和 3 个子问题，`max_pairs_per_question` 必须为 9。
+SI 要求源图宽、高都能被 `blocks_per_side` 整除。
+VisCRA 的 `attention_block_size_by_resolution` 默认为 `512x512: 5`、`2048x2048: 24`，
+其他尺寸使用 `attention_block_size: 5`。窗口必须能放进实际注意力网格；
+`zero_side_columns: true` 和 `zero_top_bottom_rows: 1` 控制四边置零。
+这里没有固定 `max_pixels` 配置，注意力输入按源图尺寸进行 patch 对齐。
+
+VisualRoleplay 的角色图使用主配置当前 `image_backend` 及其整套生图参数，
+`reference_width` 只控制文字面板缩放，不指定角色图尺寸。
+
+### auxiliary
+
+以下字段写在 QR、CAMO、HIMRD、CS-DJ、VisualRoleplay、SI、VisCRA 各自配置的
+`auxiliary` 块中，其他四种方法不调用辅助 API。
+
+| 字段 | 当前默认值 | 说明 |
+| --- | --- | --- |
+| `primary.model` / `api_key_env` | `qwen3.5-35b-a3b` / `DASHSCOPE_API_KEY` | 主辅助模型及连接匹配用环境变量名 |
+| `fallback.model` / `api_key_env` | `deepseek-v4-flash` / `DEEPSEEK_API_KEY` | 主模型耗尽尝试后的回退模型 |
+| `enable_thinking` | `false` | 布尔值；关闭时非流式，开启时流式读取最终回答 |
+| `temperature` | `1.0` | 主模型和回退模型共用，不改变 benchmark 的模型参数 |
+| `max_tokens` | `32768` | 主、回退共用输出预算 |
+| `timeout_sec` | `180` | 单次请求超时秒数 |
+| `retries` | `2` | 每个模型首次请求之外的重试数，即每模型最多 3 次 |
+| `retry_delay_sec` | `1` | 同一模型失败后到下次尝试的等待秒数 |
+
+服务连接优先匹配 `models` 下相同 `model`，否则匹配相同 `api_key_env`，继承匹配项的
+`base_url` 和密钥环境变量。主、回退两项都需要能找到连接。主配置模型的 `extra_body`
+不会原样合并到辅助请求；辅助客户端使用自己的 thinking 和 stream 设置。
+
+配置快照保存到 `augmentations/<method>/config.snapshot.yaml`，包含解析后的公开模型
+配置；VisualRoleplay 另包含当前生图配置。改变方法参数或代码会使方法缓存失效，
+修改 `runtime.concurrency` 不影响缓存。恢复和 `--force` 的范围见
+[增强文档](AUGMENTATION.md#缓存与恢复)。
+
 ## response
 
 `enabled` 默认 `true`。如果只需要 benchmark 和图片，设置 `response.enabled: false`，
-一键脚本 / `run-all` 会在图片阶段完成后结束，manifest 将回答阶段标记为 `skipped`。
+一键脚本 / `run-all` 会在图片及已启用的增强完成后结束，manifest 将回答阶段标记为 `skipped`。
 此时全流程预检不要求目标回答模型及其 API Key，也不检查其图片能力。
 显式运行 `collect-responses` 仍会采集回答，需配置有效的 `target_model` 和对应密钥。
 
 `target_model` 指向 `models` 中的目标模型别名。`mode` 支持：
+
+以下四种模式适用于原始集；选择任何增强集时都必须使用 `image_text`。
 
 | mode | 输入 | 回答形式 | 图片要求 |
 | --- | --- | --- | --- |
@@ -199,6 +271,18 @@ MCQ 也不自动解析、判对或评分。`continue_on_error` 控制普通单�
 耗尽始终终止批次。不同 mode 的输出写入不同目录，可对同一 benchmark 分别采集。命令行
 `--response-mode` 可以临时覆盖 YAML 中的 `response.mode`；`--max-items 1` 可用于单条 API
 测试。每条请求都会实时记录开始、完成、状态、进度和耗时，并同时输出到终端和 run 日志。
+
+`datasets` 默认 `[base, enabled_augmentations]`，必须为列表，支持：
+
+| 值 | 选择内容 |
+| --- | --- |
+| `base` | 本次 run 的原始 benchmark |
+| `enabled_augmentations` | 展开为当前全部已启用方法 |
+| 方法名，例如 `qr` | 只选择该已启用方法，不能选择关闭方法的历史目录 |
+
+展开后保持顺序并去重，不允许最终为空。`[base]` 适用于只采集原题或使用 MCQ/描述模式；
+`[qr, si]` 只采集两种增强。`--dataset` 可重复传入以临时覆盖该列表，仅支持
+`collect-responses` 和 `run-all`。它只选择回应范围，不改变增强生成范围。
 
 ## models
 
