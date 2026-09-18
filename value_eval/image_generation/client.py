@@ -70,10 +70,10 @@ class QwenImageClient:
             return "", response.text[:500]
         if not isinstance(data, dict):
             return "", response.text[:500]
-        error = data.get("error", {})
-        if isinstance(error, dict):
-            return str(error.get("code", "")), str(error.get("message", ""))[:500]
-        return str(data.get("code", "")), str(data.get("message", ""))[:500]
+        error = data.get("error")
+        if not isinstance(error, dict) or not error:
+            error = data
+        return str(error.get("code", "")), str(error.get("message", ""))[:500]
 
     @staticmethod
     def _fatal(status: int, code: str, message: str) -> bool:

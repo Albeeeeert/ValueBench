@@ -50,14 +50,14 @@ value-eval --help
 
 ## 选择配置
 
-`configs/` 提供三份通用配置和一份 FigStep 验证配置，文件内均有中文字段说明：
+`configs/` 提供三份通用配置和一份增强验证配置，文件内均有中文字段说明：
 
 | 配置 | 用途 |
 | --- | --- |
 | `hh_bh_4000.yaml` | 使用固定 1000 个机制严格复现 HH/BH 旧 4000 基准；也可作为扩增实验起点。 |
 | `prepared_scenarios.yaml` | 已有 `scenario_elements` 和 manifest 时使用；默认是两个场景的小样本模板。 |
 | `excel_to_benchmark.yaml` | 从中文 Excel 构建场景，再生成 benchmark、图片和原始回应。 |
-| `excel_to_benchmark_figstep_check.yaml` | 验证四类原题、FigStep 增强和回应采集。 |
+| `excel_to_benchmark_figstep_check.yaml` | 沿用现有文件，验证四类原题、11 种增强和回应采集。 |
 
 运行时始终通过 `--config` 明确选择；省略时默认使用 `prepared_scenarios.yaml`。
 
@@ -75,14 +75,14 @@ bash scripts/run_pipeline.sh
 ```
 
 使用项目 `.venv` 时，按以下顺序安装。PyTorch 固定为 2.8.0，第一条命令选择与本机
-已验证环境一致的 CUDA 12.8 构建，第二条安装其余本地生图依赖：
+已验证环境一致的 CUDA 12.8 构建，第二条安装统一的流水线、增强和本地生图依赖：
 
 ```bash
 .venv/bin/python -m pip install 'torch==2.8.0' --index-url https://download.pytorch.org/whl/cu128
-.venv/bin/python -m pip install -e '.[local-image]'
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
-修改 `pyproject.toml` 不会自动替换现有环境中的 PyTorch，需要实际执行上述安装命令。
+修改 `requirements.txt` 不会自动替换现有环境中的 PyTorch，需要实际执行上述安装命令。
 一键入口 `bash scripts/run_pipeline.sh`
 和各阶段命令均读取此选项，详细字段和旧 run 迁移方式见
 [配置说明](docs/CONFIGURATION.md#image_backendimage-和-local_image)。

@@ -58,6 +58,13 @@ class AugmentationMethod(ABC):
     requires_original_image: bool = False
     supported_response_modes: tuple[str, ...] = ("image_text",)
 
+    def bind(self, config):
+        """Attach run settings without loading models or making requests."""
+        return self
+
+    def close(self) -> None:
+        """Release method-specific model resources after generation."""
+
     @abstractmethod
     def generate(self, source: AugmentationSource, sample_id: str, output_dir: Path) -> list[AugmentationResult]:
         """Write images atomically and return one or more variants for one source."""

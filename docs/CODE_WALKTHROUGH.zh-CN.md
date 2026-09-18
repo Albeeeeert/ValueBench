@@ -838,8 +838,8 @@ both 的 instruction trace 为兼容旧实现，从 awareness trace 复制，因
 
 | 文件/目录 | 内容块与作用 |
 | --- | --- |
-| [pyproject.toml](../pyproject.toml) | build-system 选择 setuptools；project 定义安装名 value-eval、版本 0.3.0、Python≥3.10 和四个依赖；project.scripts 把 value-eval 命令映射到 value_eval.cli:main；packages.find 仅打包 value_eval* |
-| [requirements.txt](../requirements.txt) | PyYAML 读 YAML；requests 请求 HTTP；Pillow 验证和处理图片；openpyxl 读取 Excel。每行同时给出下界和主版本上界，与安装元数据一致 |
+| [pyproject.toml](../pyproject.toml) | build-system 选择 setuptools；project 定义安装名 value-eval、版本 0.3.0、Python≥3.10，依赖读取 requirements.txt；project.scripts 把 value-eval 命令映射到 value_eval.cli:main；packages.find 仅打包 value_eval* |
+| [requirements.txt](../requirements.txt) | 统一声明流水线、增强和本地生图的全部依赖；pyproject.toml 从该文件读取安装元数据。 |
 | [scripts/run_pipeline.sh](../scripts/run_pipeline.sh) | shebang 用 bash；set -Eeuo pipefail 启用严格错误处理；从脚本位置定位项目；PYTHON_BIN/VALUE_EVAL_CONFIG 可覆盖解释器与配置；先检查 Python≥3.10，否则退出 11；cd 项目后执行 python -m value_eval run-all，并转发所有参数 |
 | [.gitignore](../.gitignore) | 排除 .env/.env.ps1、日志、输出、安装 metadata、Python/pytest 缓存，不改变程序运行行为 |
 | `.env.ps1` | 本地环境赋值文件，可能含真实凭据，本文不展示内容。只有被 --env-file 或 run.env_file 指向时才由解析器读取；YAML 默认指向 .env，不会自动改读此文件 |

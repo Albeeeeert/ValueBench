@@ -97,7 +97,7 @@ class LocalQwenImageClient:
                 from diffusers import QwenImagePipeline
             except ImportError as exc:
                 raise RuntimeError(
-                    "install the local image dependencies with: pip install -e '.[local-image]'"
+                    "install the local image dependencies with: pip install -r requirements.txt"
                 ) from exc
             runtime.torch = torch
             device_count = torch.cuda.device_count()

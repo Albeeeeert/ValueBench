@@ -61,7 +61,7 @@ def build_logger(config: PipelineConfig) -> logging.Logger:
 
 def inspect_pipeline(config: PipelineConfig) -> dict[str, Any]:
     validate_generation_scope(config)
-    augmentation_settings = {name: load_method(name).snapshot for name in config.augmentation_methods}
+    augmentation_settings = {name: load_method(name, config).snapshot for name in config.augmentation_methods}
     if config.responses_enabled:
         response_datasets(config)
     effective = generation_config(config)
@@ -255,7 +255,7 @@ class Pipeline:
     ) -> dict[str, Any]:
         validate_generation_scope(self.config)
         for name in self.config.augmentation_methods:
-            load_method(name)  # Validate local method assets before spending on generation.
+            load_method(name, self.config)  # Validate local method assets before spending on generation.
         if self.config.responses_enabled:
             response_datasets(self.config)
         manifest_path = self.config.run_root / "run_manifest.json"

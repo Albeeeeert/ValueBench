@@ -1,0 +1,31 @@
+name: camo
+version: 1
+runtime:
+  concurrency: 4
+parameters:
+  font_path: ../../assets/fonts/ARIAL.TTF
+  character_masking_ratio: 0.4
+  seed: 42
+  mask_character: _
+  reference_width: 512
+  clue_font_size: 28
+  minimum_clue_font_size: 18
+  max_clue_columns: 8
+  max_clue_panel_ratio: 0.5
+  allow_height_expansion: true
+  background_color: '#F4F4F2'
+  clue_background_color: '#FFFFFF'
+  clue_foreground_color: '#111111'
+auxiliary:
+  enable_thinking: false
+  primary:
+    model: qwen3.5-35b-a3b
+    api_key_env: DASHSCOPE_API_KEY
+  fallback:
+    model: deepseek-v4-flash
+    api_key_env: DEEPSEEK_API_KEY
+  temperature: 1.0
+  max_tokens: 32768
+  timeout_sec: 180
+  retries: 2
+  retry_delay_sec: 1

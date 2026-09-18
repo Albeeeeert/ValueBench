@@ -18,7 +18,7 @@ class PortabilityTest(unittest.TestCase):
         for path in PACKAGE_ROOT.rglob("*"):
             if not path.is_file() or path.suffix not in suffixes:
                 continue
-            if "outputs" in path.parts or "logs" in path.parts:
+            if any(part in path.parts for part in ("outputs", "logs", ".venv", ".git", "build")):
                 continue
             self.assertNotIn(forbidden, path.read_text(encoding="utf-8"), str(path))
 
@@ -28,7 +28,7 @@ class PortabilityTest(unittest.TestCase):
             shutil.copytree(
                 PACKAGE_ROOT,
                 copied,
-                ignore=shutil.ignore_patterns("outputs", "logs", "__pycache__", "*.pyc", ".pytest_cache"),
+                ignore=shutil.ignore_patterns("outputs", "logs", ".venv", ".git", "build", "__pycache__", "*.pyc", ".pytest_cache"),
             )
             environment = dict(os.environ)
             environment.pop("PYTHONPATH", None)

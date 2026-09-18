@@ -4,7 +4,7 @@
 
 run:
   # 每次实验使用唯一 ID；输出写入 outputs/<id>。
-  id: augmentation_excel_to_benchmark_figstep_verified
+  id: augmentation_excel_to_benchmark_jailbreak_2048test
   # 本文件位于 configs/，.. 表示 Value_eval 项目根目录。
   root: ..
   output_root: outputs # benchmark、图片和回应输出根目录。
@@ -80,7 +80,7 @@ generation:
   max_visible_text_words: {non_text: 0, minimal_text: 8, text_supported: 20}
   strict_validation: true # 结构化证据、反事实和歧义检查，必须 true。
 
-image_backend: local # api 使用 image；local 使用 local_image。两组配置可同时保留。
+image_backend: api # api 使用 image；local 使用 local_image。两组配置可同时保留。
 
 image:
   # true=benchmark 每个机制落盘后立即生成图；false=run-all 在 benchmark 完成后统一生成。
@@ -114,7 +114,9 @@ local_image:
 
 augmentation:
   enabled: true # 对本次生成的 HH-instruction 增强；generation 仍可生成全部四类。
-  method: [figstep] # 参数位于 value_eval/augmentation/methods/figstep/config.yaml。
+  # 保留文件名和 run.id，直接为已生成的 benchmark 补做全部增强。
+  # 各方法参数位于 value_eval/augmentation/methods/<method>/config.yaml。
+  method: [figstep, qr, camo, mml_wr, mml_mirror, mml_rotate, himrd, cs_dj, visual_roleplay, si, viscra]
 
 response:
   enabled: true # false：run-all 生成图片后结束，跳过回答采集。

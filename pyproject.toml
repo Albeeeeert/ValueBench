@@ -7,25 +7,13 @@ name = "value-eval"
 version = "0.3.0"
 description = "Self-contained Plan-Game single-author multimodal benchmark pipeline"
 requires-python = ">=3.10"
-dependencies = [
-  "PyYAML>=6.0,<7",
-  "requests>=2.31,<3",
-  "Pillow>=10,<13",
-  "openpyxl>=3.1,<4",
-]
+dynamic = ["dependencies"]
 
 [project.scripts]
 value-eval = "value_eval.cli:main"
 
-[project.optional-dependencies]
-local-image = [
-  # Match the working sd environment; install the CUDA 12.8 wheel as documented.
-  "torch==2.8.0",
-  "diffusers>=0.35",
-  "transformers>=4.51",
-  "accelerate>=1.2",
-  "safetensors>=0.4",
-]
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -33,3 +21,5 @@ include = ["value_eval*"]
 
 [tool.setuptools.package-data]
 "value_eval.augmentation.methods.figstep" = ["config.yaml", "assets/fonts/*.TTF"]
+"value_eval.augmentation" = ["assets/fonts/*.TTF"]
+"*" = ["config.yaml"]

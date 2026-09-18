@@ -5,6 +5,13 @@
 HH-instruction，generation 可包含全部四类。`response.datasets` 选择回应子集。
 详见 [增强配置与独立命令](AUGMENTATION.md)。
 
+当前支持 `figstep`、`qr`、`camo`、`mml_wr`、`mml_mirror`、`mml_rotate`、`himrd`、
+`cs_dj`、`visual_roleplay`、`si`、`viscra`。从 `method` 列表移除即可关闭单个方法。
+各方法的 `auxiliary` 配置默认使用 Qwen3.5-35B-A3B（温度 1.0），失败重试 3 次后
+回退 DeepSeek-V4-Flash；默认 `enable_thinking: true`，两个模型均开启思考并使用流式响应，
+只将最终回答交给增强方法。URL、密钥环境变量继承当前主配置。VisualRoleplay 的额外角色图
+使用当前 `image_backend`，无需重复配置生图模型。
+
 所有相对路径均以 `run.root` 指向的项目根目录解析。密钥字段只填写环境变量名。
 
 ## run
@@ -116,18 +123,18 @@ local_image:
 原地更换权重时同步修改 `model_revision`；此字段用于记录和缓存失效，不是下载参数。
 
 本地依赖将 PyTorch 固定为 `2.8.0`，避免无上限升级到本机驱动不兼容的 CUDA 13 构建。
-`pyproject.toml` 的版本约束不指定 pip 下载源，CUDA 构建通过安装命令明确选择。
+`requirements.txt` 的版本约束不指定 pip 下载源，CUDA 构建通过安装命令明确选择。
 在项目根目录执行：
 
 ```bash
 .venv/bin/python -m pip install 'torch==2.8.0' --index-url https://download.pytorch.org/whl/cu128
-.venv/bin/python -m pip install -e '.[local-image]'
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 CUDA 12.8 安装源见 [PyTorch 官方安装说明](https://pytorch.org/get-started/previous-versions/#v280)。
 修改依赖文件不会自动更新已经安装的包；上述命令也用于替换现有 `.venv` 中的错误版本。
 
-可选依赖要求 Diffusers >= 0.35，该版本加入 Qwen-Image pipeline，见
+统一依赖要求 Diffusers >= 0.35，该版本加入 Qwen-Image pipeline，见
 [官方发布说明](https://github.com/huggingface/diffusers/releases/tag/v0.35.0)。
 
 本地默认 512×512、50 步、BF16、CFG 4.0；`size` 的两维必须为正的 16 倍数。

@@ -51,7 +51,7 @@ def response_datasets(config: PipelineConfig) -> tuple[str, ...]:
         raise ValueError("response.datasets selects no datasets")
     mode = str(config.response.get("mode", "image_text"))
     for name in result:
-        if name != "base" and mode not in load_method(name).supported_response_modes:
+        if name != "base" and mode not in load_method(name, config).supported_response_modes:
             raise ValueError(f"augmentation {name} does not support response.mode={mode}; use image_text")
     return tuple(dict.fromkeys(result))
 
@@ -146,7 +146,7 @@ def method_lock(directory: Path) -> Iterator[None]:
 
 def load_augmented_samples(config: PipelineConfig, name: str) -> list[dict[str, Any]]:
     selected_methods(config, [name])
-    method = load_method(name)
+    method = load_method(name, config)
     sources = load_sources(config.run_root, require_images=method.requires_original_image)
     directory = config.run_root / "augmentations" / name
     manifest = load_json_if_exists(directory / "manifest.json", {})
@@ -220,7 +220,7 @@ class AugmentationRunner:
             raise ValueError("no augmentation methods enabled; set augmentation.enabled=true and method: [figstep]")
         result: dict[str, Any] = {}
         for name in names:
-            method = load_method(name)
+            method = load_method(name, self.config)
             sources = load_sources(self.config.run_root, require_images=method.requires_original_image)
             result[name] = {
                 "source_count": len(sources), "selected_source_count": min(max_items or len(sources), len(sources)),
@@ -323,7 +323,11 @@ class AugmentationRunner:
         results = {}
         try:
             for name in names:
-                results[name] = self._run_method(load_method(name), force=force, max_items=max_items)
+                method = load_method(name, self.config)
+                try:
+                    results[name] = self._run_method(method, force=force, max_items=max_items)
+                finally:
+                    method.close()
         finally:
             dataset = publish_dataset(self.config)
         if any(result["status"] == "failed" for result in results.values()):

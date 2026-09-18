@@ -1,0 +1,12 @@
+name: mml_mirror
+version: 1
+runtime:
+  concurrency: 4
+parameters:
+  font_path: ../../assets/fonts/ARIAL.TTF
+  font_size: 18
+  min_font_size: 10
+  image_width: 760
+  image_height: 760
+  steps: 3
+  seed: 42

@@ -77,6 +77,10 @@ instruction，两者 `image_description`、视觉模式和目标场景一致。�
 - `input.images`：图片的 run-relative 路径、SHA256、尺寸、格式。
 - `metadata`：方法专用信息，例如 FigStep 的排版文字及文字边界。
 
+新增方法的 metadata 还保存辅助模型及请求尝试记录、抽取片段、可逆替换字典、图块顺序、
+注意力遮挡框、角色规划或任务分解等对应字段。API 和生图中间结果位于各方法的
+`preparation/`；它们不作为独立测评样本进入清单。CS-DJ 的 CLIP 检索缓存位于 `resources/`。
+
 原始选项、答案和风险审计只属于 source，不直接赋予增强输入。完整数据集清单位于
 `dataset/manifest.json`，分别记录原始集和当前启用方法的路径、数量与就绪状态。
 增强回应增加 `dataset`、`method`、`source_benchmark_id`，单独保存到

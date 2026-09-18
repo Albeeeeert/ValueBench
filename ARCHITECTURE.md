@@ -56,7 +56,7 @@ planner 生成题型蓝图 -> single author 生成题目
   v
 image_description -> (可选：每机制 checkpoint 后) 图片 API / 本地 Qwen-Image -> 图片校验/manifest
   v
-可选增强：HH-instruction -> FigStep 文字图片/提示词 -> dataset manifest
+可选增强：HH-instruction -> 所选增强方法（11 种独立配置）-> dataset manifest
   v
 原始及所选增强图文 -> target model -> raw response JSONL
 ```

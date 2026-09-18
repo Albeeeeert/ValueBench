@@ -1,0 +1,26 @@
+name: si
+version: 1
+runtime:
+  concurrency: 4
+parameters:
+  font_path: ../../assets/fonts/ARIAL.TTF
+  font_size: 48
+  reference_width: 512
+  padding: 16
+  spacing: 8
+  blocks_per_side: 2
+  shuffle_prompt: true
+  seed: 42
+auxiliary:
+  enable_thinking: false
+  primary:
+    model: qwen3.5-35b-a3b
+    api_key_env: DASHSCOPE_API_KEY
+  fallback:
+    model: deepseek-v4-flash
+    api_key_env: DEEPSEEK_API_KEY
+  temperature: 1.0
+  max_tokens: 32768
+  timeout_sec: 180
+  retries: 2
+  retry_delay_sec: 1

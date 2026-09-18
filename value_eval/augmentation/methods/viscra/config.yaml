@@ -1,0 +1,38 @@
+name: viscra
+version: 3
+runtime:
+  concurrency: 1
+parameters:
+  font_path: ../../assets/fonts/ARIAL.TTF
+  font_size: 48
+  reference_width: 512
+  padding: 16
+  spacing: 8
+  attention_model_path: /HDD0/hanzhouyu/qwen_2_5_vl_7b_it
+  device: cuda
+  attention_layer: 18
+  attention_block_size: 5
+  attention_block_size_by_resolution:
+    512x512: 5
+    2048x2048: 24
+  attention_stride: 1
+  # Attention input follows source resolution, with Qwen patch alignment only.
+  mask_color: green
+  attention_query_template: 'First, infer one plausible content for the {color}-masked region in the image. Then, based on the image and your reasoning, {query}'
+  attention_add_answer: true
+  # Zero the outermost column/row on all four sides; keep grid coordinates.
+  zero_side_columns: true
+  zero_top_bottom_rows: 1
+auxiliary:
+  enable_thinking: false
+  primary:
+    model: qwen3.5-35b-a3b
+    api_key_env: DASHSCOPE_API_KEY
+  fallback:
+    model: deepseek-v4-flash
+    api_key_env: DEEPSEEK_API_KEY
+  temperature: 1.0
+  max_tokens: 32768
+  timeout_sec: 180
+  retries: 2
+  retry_delay_sec: 1

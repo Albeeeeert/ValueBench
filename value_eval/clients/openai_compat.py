@@ -121,6 +121,77 @@ class OpenAICompatibleClient:
             return "", ""
         return "", response.text[:500]
 
+    @staticmethod
+    def _check_error(status: int, code: str, message: str) -> None:
+        combined = f"{code} {message}".lower()
+        if code.lower() == "cyber_policy" or any(marker in combined for marker in _ITEM_POLICY_ERROR_MARKERS):
+            raise ItemModelError(f"model content policy rejected current item: {code or status}")
+        if status in (401, 402) or any(marker in combined for marker in (*_AUTH_ERROR_MARKERS, *_QUOTA_ERROR_MARKERS)):
+            raise FatalModelError(f"model authentication or billing failure: {code or status}")
+        if status >= 400:
+            raise ItemModelError(f"HTTP {status} {code}: {message}")
+
+    @classmethod
+    def _stream_data(cls, response: requests.Response) -> dict[str, Any]:
+        """Collect SSE answer and reasoning separately; reject incomplete streams."""
+        def events():
+            parts: list[str] = []
+            for raw in response.iter_lines():
+                line = raw.decode("utf-8") if isinstance(raw, bytes) else raw
+                if not line:
+                    if parts:
+                        yield "\n".join(parts)
+                        parts = []
+                elif line.startswith("data:"):
+                    parts.append(line[5:].lstrip())
+            if parts:
+                yield "\n".join(parts)
+
+        answer, reasoning = [], []
+        request_id, finish_reason = "", None
+        usage: dict[str, Any] = {}
+        complete = False
+        for event in events():
+            if event.strip() == "[DONE]":
+                complete = True
+                break
+            data = json.loads(event)
+            if not isinstance(data, dict):
+                raise ValueError("stream event must be an object")
+            if data.get("error") or (data.get("code") and not data.get("choices")):
+                error = data.get("error", data)
+                error = error if isinstance(error, dict) else {"message": str(error)}
+                code, message = str(error.get("code") or error.get("type") or ""), str(error.get("message", ""))[:500]
+                cls._check_error(400, code, message)
+            request_id = str(data.get("id") or request_id)
+            if isinstance(data.get("usage"), dict):
+                usage = data["usage"]
+            choices = data.get("choices", [])
+            if not isinstance(choices, list):
+                raise ValueError("stream choices must be an array")
+            for choice in choices:
+                if not isinstance(choice, dict):
+                    raise ValueError("stream choice must be an object")
+                if choice.get("index", 0) != 0:
+                    continue
+                delta = choice.get("delta", {})
+                if not isinstance(delta, dict):
+                    raise ValueError("stream delta must be an object")
+                for field, output in (("content", answer), ("reasoning_content", reasoning)):
+                    value = delta.get(field)
+                    if value is not None:
+                        if not isinstance(value, str):
+                            raise ValueError(f"stream {field} must be a string")
+                        output.append(value)
+                if choice.get("finish_reason") is not None:
+                    finish_reason = choice["finish_reason"]
+                    complete = True
+        if not complete:
+            raise ItemModelError("model response stream ended before completion")
+        return {"id": request_id, "usage": usage, "choices": [{"finish_reason": finish_reason, "message": {
+            "content": "".join(answer), "reasoning_content": "".join(reasoning),
+        }}]}
+
     def chat(self, messages: list[dict[str, Any]], *, json_mode: bool = False) -> ApiResponse:
         payload: dict[str, Any] = {
             "model": self.config.model,
@@ -147,6 +218,7 @@ class OpenAICompatibleClient:
                     headers=headers,
                     json=payload,
                     timeout=self.config.timeout_sec,
+                    **({"stream": True} if payload.get("stream") else {}),
                 )
             except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectTimeout) as exc:
                 raise ItemModelError(f"model request timed out: {exc}") from exc
@@ -162,19 +234,21 @@ class OpenAICompatibleClient:
                     continue
                 raise ItemModelError(f"model request retries exhausted: {exc}") from exc
             else:
-                code, message = self._error(response)
-                combined = f"{code} {message}".lower()
-                if code.lower() == "cyber_policy" or any(marker in combined for marker in _ITEM_POLICY_ERROR_MARKERS):
-                    raise ItemModelError(f"model content policy rejected current item: {code or response.status_code}")
-                if response.status_code in (401, 402) or any(
-                    marker in combined for marker in (*_AUTH_ERROR_MARKERS, *_QUOTA_ERROR_MARKERS)
-                ):
-                    raise FatalModelError(f"model authentication or billing failure: {code or response.status_code}")
+                streamed = bool(payload.get("stream"))
+                json_response = not streamed or "application/json" in response.headers.get("Content-Type", "").lower()
+                if response.status_code >= 400 or json_response:
+                    try:
+                        code, message = self._error(response)
+                        self._check_error(response.status_code, code, message)
+                    except Exception:
+                        if streamed:
+                            response.close()
+                        raise
                 if response.status_code >= 400:
-                    raise ItemModelError(f"HTTP {response.status_code} {code}: {message}")
+                    raise ItemModelError(f"HTTP {response.status_code}")
                 else:
                     try:
-                        data = response.json()
+                        data = response.json() if json_response else self._stream_data(response)
                         first_choice = data["choices"][0]
                         if not isinstance(first_choice, dict):
                             raise TypeError("choices[0] must be an object")
@@ -185,8 +259,10 @@ class OpenAICompatibleClient:
                         if content_value is None or str(content_value) == "":
                             content_value = first_choice.get("text", "")
                         content = str(content_value or "")
-                    except ItemModelError:
+                    except ModelError:
                         raise
+                    except requests.RequestException as exc:
+                        raise ItemModelError(f"model response stream interrupted: {exc}") from exc
                     except (KeyError, IndexError, TypeError, ValueError) as exc:
                         last_error = exc
                         if attempt + 1 < self.config.max_retries:
@@ -194,6 +270,9 @@ class OpenAICompatibleClient:
                             time.sleep(base + random.uniform(0.0, self.config.backoff_jitter_sec))
                             continue
                         raise ItemModelError(f"invalid chat completion response: {exc}") from exc
+                    finally:
+                        if streamed:
+                            response.close()
                     if not content.strip():
                         last_error = RuntimeError("model returned an empty response")
                         if attempt + 1 < self.config.max_retries:
