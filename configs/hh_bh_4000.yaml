@@ -110,8 +110,8 @@ local_image:
   concurrency: 1 # 本地单模型串行推理，固定为 1。
 
 augmentation:
-  enabled: false # 改为 true 启用 HH-instruction 越狱增强。
-  # 仅增强 HH-instruction；generation 仍可生成 HH/BH × awareness/instruction 四类原题。
+  enabled: false # 改为 true 启用 HH-instruction 越狱。
+  # 仅对 HH-instruction 执行越狱；generation 仍可生成 HH/BH × awareness/instruction 四类原题。
   # 删除列表中的方法名可关闭对应方法；各方法参数位于 value_eval/augmentation/methods/<method>/config.yaml。
   method: [figstep, qr, camo, mml_wr, mml_mirror, mml_rotate, himrd, cs_dj, visual_roleplay, si, viscra]
 
@@ -126,7 +126,7 @@ response:
   # description_mcq=图片描述+问题+A/B/C/D，只要求返回一个字母，不需要图片文件。
   # 所有模式都不发送参考答案/rationale，也不自动判分。
   mode: image_text
-  datasets: [base, enabled_augmentations] # 采集原题和已启用增强集；仅采集增强集时改为 [enabled_augmentations]。
+  datasets: [base, enabled_augmentations] # 采集原题和已启用越狱样本集；仅采集越狱样本集时改为 [enabled_augmentations]。
   concurrency: 3
   # 普通单条失败继续处理；鉴权和连接耗尽仍会终止批次。
   continue_on_error: true

@@ -4,30 +4,25 @@
 开始构建场景，也支持直接使用已准备好的场景数据集，随后执行严格 HH/BH Plan-Game 单生成器、
 图片生成和目标模型原始回应采集。项目不包含 judge、自动评分或答案判定。
 
-支持 11 种可选的越狱增强方法：FigStep、QR、CAMO、MML_WR、MML_Mirror、MML_Rotate、
-HIMRD、CS-DJ、VisualRoleplay、SI 和 VisCRA。增强只处理 HH-instruction，原始四类数据
-仍按 generation 配置生成。已有 benchmark 可通过 `generate-augmentations` 独立补做。
-方法说明见 [数据增强](docs/AUGMENTATION.md)，完整验证入口沿用
-[excel_to_benchmark_figstep_check.yaml](configs/excel_to_benchmark_figstep_check.yaml)。
+图片生成支持 API 和本地 Qwen-Image，并提供 11 种面向 HH-instruction 的越狱方法。
+越狱操作见[第四步](#第四步可选hh-instruction-越狱)，参数见
+[配置说明](docs/CONFIGURATION.md#augmentation)。
 
 完整链路如下：
 
 ```text
 价值观 Excel -> taxonomy 翻译/提取 -> 场景拆分 -> elements
              -> Plan-Game planner + single author
-             -> 图片生成 -> 可选数据增强 -> 目标模型原始回应 JSONL
+             -> 图片生成 -> 可选 HH-instruction 越狱 -> 目标模型原始回应 JSONL
 ```
 
 代码边界见 [ARCHITECTURE.md](ARCHITECTURE.md)，配置字段见
 [docs/CONFIGURATION.md](docs/CONFIGURATION.md)，Excel 规范见
-[docs/EXCEL_INPUT.md](docs/EXCEL_INPUT.md)。阶段时序与恢复规则见
-[docs/PIPELINE.md](docs/PIPELINE.md)，产物字段见 [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md)，
-部署和排错分别见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) 与
-[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)。
+[docs/EXCEL_INPUT.md](docs/EXCEL_INPUT.md)。
 
 ## 环境准备
 
-要求 Python 3.10 或更高版本。
+运行环境为 Linux、Python 3.10 或更高版本。Windows 用户在 WSL/Linux 环境中执行以下命令。
 
 ```bash
 cd Value_eval
@@ -44,67 +39,64 @@ DEEPSEEK_API_KEY=...
 DASHSCOPE_API_KEY=...
 ```
 
-程序只读取环境变量，不会把密钥写入 YAML 或运行 manifest。也可以安装命令行入口：
+程序只读取环境变量，不会把密钥写入 YAML 或运行 manifest。
+以下命令均在项目根目录 `Value_eval/` 中执行，使用 `python -m value_eval` 启动程序。
+查看可用命令和参数：
 
 ```bash
-python -m pip install -e .
-value-eval --help
+python -m value_eval --help
 ```
 
 ## 选择配置
 
-`configs/` 提供三份通用配置和一份增强验证配置，文件内均有中文字段说明：
+`configs/` 提供三份通用配置和一份越狱集成配置，文件内均有中文字段说明：
 
 | 配置 | 用途 |
 | --- | --- |
-| `hh_bh_4000.yaml` | 使用固定 1000 个机制严格复现 HH/BH 旧 4000 基准；也可作为扩增实验起点。 |
+| `hh_bh_4000.yaml` | 使用固定 1000 个机制构建 HH/BH × 双题型的 4000 条基准。 |
 | `prepared_scenarios.yaml` | 已有 `scenario_elements` 和 manifest 时使用；默认是两个场景的小样本模板。 |
 | `excel_to_benchmark.yaml` | 从中文 Excel 构建场景，再生成 benchmark、图片和原始回应。 |
-| `excel_to_benchmark_figstep_check.yaml` | 四类原题、11 种增强和回应采集的小样本模板；当前使用 API 生成 2048×2048 图片。 |
+| `excel_to_benchmark_figstep_check.yaml` | 单行 Excel、四类原题和全部 11 种越狱方法；需额外准备本地模型及图库。 |
 
 运行时始终通过 `--config` 明确选择；省略时默认使用 `prepared_scenarios.yaml`。
 
-三份配置均同时提供 `image`（API）和 `local_image`（本地 Qwen-Image）。当前模板设置
-`image_backend: local`，使用 `/HDD0/hanzhouyu/Qwen-image-2512`，512×512、50 步、固定 seed 42，
-通过 `device_map: balanced` 交给 Diffusers 在当前可见 GPU 中自动分配。
-无需指定 GPU 数量；如需限定两张卡，可设置 `CUDA_VISIBLE_DEVICES=0,1`。
-切换为 `image_backend: api` 即可使用原 API 配置；旧配置省略该字段仍默认 API。
-可使用参考项目已有环境运行：
+选择模板后复制为本次运行的配置。以下以两个已准备场景为例：
 
 ```bash
-CUDA_VISIBLE_DEVICES=0,1 \
-PYTHON_BIN=/SSD3/hanzhouyu/anaconda3/envs/sd/bin/python \
-bash scripts/run_pipeline.sh
+cp configs/prepared_scenarios.yaml configs/my_run.yaml
+CONFIG=configs/my_run.yaml
 ```
 
-使用项目 `.venv` 时，按以下顺序安装。PyTorch 固定为 2.8.0，第一条命令选择与本机
-已验证环境一致的 CUDA 12.8 构建，第二条安装统一的流水线、增强和本地生图依赖：
+使用 Excel、4000 条基准或全部越狱方法时，将复制命令的源文件换成表中对应模板。
+编辑 `configs/my_run.yaml`，在开始生成前完成以下设置：
 
-```bash
-.venv/bin/python -m pip install 'torch==2.8.0' --index-url https://download.pytorch.org/whl/cu128
-.venv/bin/python -m pip install -r requirements.txt
-```
+| 设置 | 填写要求 |
+| --- | --- |
+| `run.id` | 本次运行的唯一名称，例如 `my_run` |
+| 场景输入 | Excel 路线填写工作簿与工作表；prepared 路线填写场景目录和配套清单 |
+| `models` | 填写账户可调用的模型名称、接口地址和密钥变量名 |
+| 图片后端 | API 路线设 `image_backend: api`；本地路线设 `local` 并填写完整权重路径 |
+| `augmentation` | 启用越狱时设置 `enabled: true` 和方法列表，见第四步 |
+| `response` | 采集回应时设置目标模型与数据集；仅生成数据时设 `enabled: false` |
 
-修改 `requirements.txt` 不会自动替换现有环境中的 PyTorch，需要实际执行上述安装命令。
-一键入口 `bash scripts/run_pipeline.sh`
-和各阶段命令均读取此选项，详细字段和旧 run 迁移方式见
-[配置说明](docs/CONFIGURATION.md#image_backendimage-和-local_image)。
-
-只需要数据产物时，将配置中的 `response.enabled` 改为 `false`，一键脚本会在
-图片及已启用的增强生成完成后结束，跳过目标模型回答采集。该开关默认 `true`。
+三份通用模板预设本地生图，越狱集成模板预设 API 生图。后端参数见
+[配置说明](docs/CONFIGURATION.md#图片后端)，方法资源见[越狱配置表](docs/CONFIGURATION.md#augmentation)。
+下文命令均读取 `$CONFIG`，示例使用双题型 `--style both`；单题型运行时，各阶段统一使用
+`--style awareness` 或 `--style instruction`。新终端中重新激活环境并设置
+`CONFIG=configs/my_run.yaml`。YAML 示例为局部字段，编辑时合并到已有配置块。
 
 ## 第一步：Excel 生成场景文件
 
-如果已经有 `scenario_elements/*.json` 和 manifest，可跳过本步，直接进入第二步。
+本节适用于 `scenario_source.mode: excel`。使用已准备场景时从第二步开始。
 
 ### 输入和配置
 
-使用 [configs/excel_to_benchmark.yaml](configs/excel_to_benchmark.yaml)，至少修改：
+以 [configs/excel_to_benchmark.yaml](configs/excel_to_benchmark.yaml) 创建运行配置，并设置：
 
 ```yaml
 run:
-  # 每次实验使用新 ID；后续 benchmark 和图片阶段继续使用同一份配置。
-  id: my_excel_run
+  # 后续阶段沿用此运行 ID。
+  id: my_run
 
 scenario_source:
   mode: excel
@@ -139,14 +131,14 @@ scenario_source:
 
 ```bash
 python -m value_eval validate-excel \
-  --config configs/excel_to_benchmark.yaml
+  --config "$CONFIG"
 ```
 
 ### 正式生成场景
 
 ```bash
 python -m value_eval prepare-scenarios \
-  --config configs/excel_to_benchmark.yaml
+  --config "$CONFIG"
 ```
 
 中断后执行同一命令会按 fingerprint 和 checkpoint 恢复。只有确认要忽略已有缓存时才加
@@ -156,7 +148,7 @@ python -m value_eval prepare-scenarios \
 
 ```bash
 python -m value_eval validate-scenarios \
-  --config configs/excel_to_benchmark.yaml
+  --config "$CONFIG"
 ```
 
 输出位于：
@@ -169,26 +161,25 @@ outputs/<run.id>/scenario_preparation/
 └── work/<fingerprint>/  # 中间请求、解析结果和 checkpoint
 ```
 
-Excel 模式下不需要把这些路径再填写到 `generation.input_dir`；使用同一份
-`excel_to_benchmark.yaml` 运行第二步时，程序会自动读取本次 `run.id` 发布的场景。
+Excel 模式下，第二步自动读取本次运行发布的场景。
 
 ## 第二步：场景文件生成 Benchmark
 
 ### 选择入口配置
 
-有三种常见入口：
+本节沿用 `$CONFIG`，按所选模板确定场景来源：
 
-| 场景来源 | 使用配置 | 说明 |
+| 场景来源 | 来源模板 | 说明 |
 | --- | --- | --- |
 | 刚完成第一步的 Excel run | `excel_to_benchmark.yaml` | 保持相同 `run.id`，自动读取本次发布的场景。 |
 | 自己已有场景目录和 manifest | `prepared_scenarios.yaml` | 修改 `generation.input_dir` 和 `input_manifest`。 |
-| 严格复现旧 4000 | `hh_bh_4000.yaml` | 固定 canonical 场景和旧 1000 机制 selection。 |
+| 固定 4000 条基准 | `hh_bh_4000.yaml` | 固定 canonical 场景和 1000 机制 selection。 |
 
-使用 prepared 场景时，至少配置：
+运行内置样例时保留模板的输入和数量设置。接入自己的 prepared 场景时，修改相应字段：
 
 ```yaml
 run:
-  id: my_prepared_run
+  id: my_run
 
 scenario_source:
   mode: prepared
@@ -221,21 +212,26 @@ generation:
 ```yaml
 generation:
   input_dir: inputs/scenarios/my_subset/scenario_elements
+  input_manifest: null
+  input_selection: null
 ```
 
-`input_selection` 仅用于不能整理输入目录、且必须从共享大目录中精确选择
-`(scenario_id, element_id)` 时使用。
+从共享目录精确选择机制时，使用 `input_selection` 指定 `(scenario_id, element_id)` 集合。
 
 如果只生成一种题型，配置必须成对修改：
 
 ```yaml
-# 只生成 awareness
-styles: [awareness]
-share_image_across_styles: false
+generation:
+  styles: [awareness]
+  share_image_across_styles: false
+```
 
-# 或只生成 instruction
-styles: [instruction]
-share_image_across_styles: false
+或只生成 instruction：
+
+```yaml
+generation:
+  styles: [instruction]
+  share_image_across_styles: false
 ```
 
 还需检查：
@@ -247,85 +243,42 @@ share_image_across_styles: false
 - `concurrency`、`item_max_attempts`、`shard_max_attempts`：并发和恢复参数。
 - `image.generate_during_benchmark`：是否在本阶段同步启动图片任务，详见第三步。
 
-### 并发和速度估算
+### 并发设置
 
-`generation.concurrency` 是**每个 profile 的机制级并发数**，不是整个进程的全局并发数。
-HH 和 BH 会并行运行，因此 `[hh, bh]` 且 `concurrency: 2` 时，文本生成峰值为 4 个机制；
-只运行 `[hh]` 时峰值为 2 个机制。每个机制在 `both` 模式生成两条图文对，在单 style
-模式生成一条图文对。`image.concurrency` 是图片线程池的全局并发数，和文本线程池独立。
+`generation.concurrency` 控制每个 profile 的机制并发数。例如 HH/BH 同时运行且值为 2 时，
+文本生成最多并行处理 4 个机制。双题型每个机制生成两条题，单题型生成一条。
 
-仓库当前配置值如下：
+| 配置项 | 控制范围 |
+| --- | --- |
+| `scenario_source.concurrency` | Excel 场景构建并发 |
+| `generation.concurrency` | 每个 profile 的构题并发 |
+| `image.concurrency` | API 生图的全局并发 |
+| `local_image.concurrency` | 本地生图，固定为 1 |
+| 方法配置的 `runtime.concurrency` | 单个越狱方法的源题处理并发 |
+| `response.concurrency` | 目标模型回应采集并发 |
 
-| 配置 | `generation.concurrency` | HH/BH 同跑文本峰值 | `image.concurrency` |
-| --- | ---: | ---: | ---: |
-| `prepared_scenarios.yaml` / `excel_to_benchmark.yaml` | 2 | 4 | 2 |
-| `hh_bh_4000.yaml` | 3 | 6 | 3 |
-
-这里所说的“默认”是 YAML 中显式填写的运行值；实际运行始终以所选 `--config` 为准。
-
-2026-09-16 使用 `deepseek-v4-flash` planner、`qwen3-max` author 和
-`qwen-image-2.0`，在网络正常且 planner 单次约 7--9 秒时，测得/推算吞吐如下。这里的
-“图文对”指一条 benchmark item 及其引用图片；`both` 的两条 item 共用一张唯一图片。
-
-| 模式 | `generation.concurrency` | 文本峰值并发 | 预计图文对/小时 | 唯一图片/小时 |
-| --- | ---: | ---: | ---: | ---: |
-| HH+BH × both | 2 | 4 | 长时间约 300--320；28 条短任务约 280 | 约 150--160 |
-| 单 profile × 单 style，如 HH × instruction | 2 | 2 | 约 130--145 | 约 130--145 |
-| 单 profile × 单 style | 3 | 3 | 约 195--220 | 约 195--220 |
-| 单 profile × 单 style | 4 | 4 | 约 260--290 | 约 260--290 |
-
-项目目标为 200 图文对/小时。只生成 `HH × instruction` 时，建议先把
-`generation.concurrency` 从 2 改为 3；这是达到目标的最低建议值。若实测持续低于 200，
-再改为 4 留出余量。对应配置为：
-
-```yaml
-generation:
-  profiles: [hh]
-  styles: [instruction]
-  share_image_across_styles: false
-  concurrency: 3 # 约 195--220 对/小时；需要更大余量时改为 4。
-
-image:
-  generate_during_benchmark: true
-  concurrency: 2 # 实测约 11 秒/张，当前不是吞吐瓶颈。
-```
-
-本次 28 条实验在 planner 出现 136--140 秒服务延迟时实际耗时 13 分 7 秒，仅约 128
-图文对/小时；单 profile 单 style 在同类延迟下可能只有约 40--55 对/小时。提高并发不能保证
-绕过服务端排队或限流，调整后应先用小批次观察日志中的 planner 延迟、429 和超时，再决定是否
-继续提高。以上数字是当前模型、提示长度和 API 条件下的容量参考，不是固定性能承诺。
+先用小批次记录各阶段耗时、失败率和服务限流情况，再调整并发与批次规模。
+吞吐按实际完成题数统计；双题型的共享图片单独计数。
 
 ### 预检输入和预计数量
 
-prepared 输入运行：
+场景准备完成后，检查本次运行的输入与计划题数：
 
 ```bash
-python -m value_eval validate-input \
-  --config configs/prepared_scenarios.yaml
+python -m value_eval validate-input --config "$CONFIG"
 ```
 
-刚由 Excel 发布场景时运行：
+| 输出字段 | 含义与检查要求 |
+| --- | --- |
+| `scenario_count` / `scenario_element_count` | 场景数与选中的 element 数，与输入范围一致 |
+| `generation_job_count` | 每个 profile 的机制任务数 |
+| `planned_questions_per_profile` | 每个 profile 的计划题数 |
+| `variants_per_scenario` | 每场景变体数，0 为逐 element 模式 |
+| `prepared_scenarios_ready` | 场景输入已就绪 |
+| `missing_api_key_envs` | 应为空列表 |
+| `local_image_status` | 本地生图路线的目录、依赖与 CUDA 检查结果 |
 
-```bash
-python -m value_eval validate-input \
-  --config configs/excel_to_benchmark.yaml
-```
-
-旧 4000 配置运行：
-
-```bash
-python -m value_eval validate-input \
-  --config configs/hh_bh_4000.yaml
-```
-
-输出中的关键字段：
-
-- `scenario_count`：场景数。
-- `scenario_element_count`：输入 element 数。
-- `generation_job_count`：扩增后每个 profile 的机制任务数。
-- `planned_questions_per_profile`：每个 profile 最终题数。
-- `variants_per_scenario`：每场景变体数，0 表示 element-once。
-- `missing_api_key_envs`：尚未设置的密钥环境变量。
+预检完成本地输入与配置检查。服务连接和实际推理通过下一步的小样本运行验证。
 
 ### 小样本测试
 
@@ -333,48 +286,24 @@ python -m value_eval validate-input \
 
 ```bash
 python -m value_eval generate-benchmark \
-  --config configs/prepared_scenarios.yaml \
+  --config "$CONFIG" \
   --style both \
   --max-items 4
 ```
 
-也可以临时覆盖每场景变体数：
-
-```bash
-python -m value_eval generate-benchmark \
-  --config configs/hh_bh_4000.yaml \
-  --style both \
-  --variants-per-scenario 5 \
-  --max-items 4
-```
+需要测试场景变体时，在本次首次生成命令中增加 `--variants-per-scenario N`。
+同一批次续跑时保留相同参数。
 
 ### 正式生成 Benchmark
 
-```bash
-python -m value_eval generate-benchmark \
-  --config configs/prepared_scenarios.yaml \
-  --style both
-```
-
-Excel 场景改用：
+正式批次使用独立的 `run.id`，按所需规模设置变体数及 `max_items_per_profile`，然后执行：
 
 ```bash
-python -m value_eval generate-benchmark \
-  --config configs/excel_to_benchmark.yaml \
-  --style both
+python -m value_eval generate-benchmark --config "$CONFIG" --style both
 ```
 
-旧 4000 复现改用：
-
-```bash
-python -m value_eval generate-benchmark \
-  --config configs/hh_bh_4000.yaml \
-  --style both
-```
-
-`both` 严格使用旧共享图片流程：awareness 使用 planner 和 author；paired instruction 不接收
-plan，只逐字复用 awareness 的图片描述。单独 awareness/instruction 都执行自己的
-planner → author 流程，并且不产生共享图片元数据。
+`both` 模式下，awareness 与 instruction 共享图片描述；单题型分别执行独立的规划与编写流程。
+生成机制及校验规则见 [流水线说明](docs/PIPELINE.md#plan-game-单生成器)。
 
 数量计算：
 
@@ -388,7 +317,7 @@ planner → author 流程，并且不产生共享图片元数据。
 473 × 5 × 2 × 2 = 9460 条题
 ```
 
-当 `variants_per_scenario: 0` 时不使用该公式中的变体项，而是按选中的 element 数计算。旧
+当 `variants_per_scenario: 0` 时按选中的 element 数计算。
 4000 配置为 1000 elements × 2 profiles × 2 styles = 4000 条题。
 
 benchmark 输出位于：
@@ -407,9 +336,11 @@ outputs/<execution_run_id>/benchmark/
 
 ### 配置图片模型
 
-在生成 benchmark 使用的同一份 YAML 中配置：
+图片阶段读取本次运行配置中的生图参数。以下为 API 配置；本地路线使用 `local_image`
+及同名 `generate_during_benchmark` 开关，见[配置说明](docs/CONFIGURATION.md#图片后端)。
 
 ```yaml
+image_backend: api
 image:
   # false：benchmark 完成后人工执行 generate-images，推荐用于正式批量构建。
   # true：每个机制 checkpoint 落盘后立即提交图片任务。
@@ -425,17 +356,11 @@ image:
   timeout_sec: 120
   max_retries: 3
   rate_limit_retries: 6
-  moderation_retry:
-    enabled: true
-    model: author
-    validator_model: author
-    max_rewrites: 1
 ```
 
 `api_key_env` 填环境变量名称，真实密钥写在 `.env`。`size` 必须和服务实际返回尺寸一致。
-API 提示词被审核拒绝时，仅尝试一次中性化措辞及同物体的技术化表述，保留原有画面风格，
-通过独立的视觉 anchor 和风格校验后才提交。原始描述保留，实际提示词和重试历史写入图片 manifest；普通重跑
-不重置已耗尽的预算。详见[审核重试配置](docs/CONFIGURATION.md#审核拒绝后的提示词重试)。
+API 审核拒绝后默认进行一次保持视觉事实与风格的措辞改写，通过独立校验才提交；原描述不变，
+历史保存到图片 manifest。普通重跑不重置已耗尽的额度，见[审核重试](docs/CONFIGURATION.md#审核重试)。
 
 ### 方式 A：Benchmark 完成后人工生成
 
@@ -443,15 +368,8 @@ API 提示词被审核拒绝时，仅尝试一次中性化措辞及同物体的�
 
 ```bash
 python -m value_eval generate-images \
-  --config configs/prepared_scenarios.yaml \
+  --config "$CONFIG" \
   --style both
-```
-
-Excel 和旧 4000 分别替换配置路径：
-
-```bash
-python -m value_eval generate-images --config configs/excel_to_benchmark.yaml --style both
-python -m value_eval generate-images --config configs/hh_bh_4000.yaml --style both
 ```
 
 小样本图片测试可加 `--max-items 2`；该限制按每个 profile 的图片任务计算。
@@ -483,88 +401,61 @@ outputs/<execution_run_id>/images/<profile>/
 注意：即时图片模式会在最终跨分片重复校验前产生图片请求。如果 benchmark 最终失败，已经
 发生的图片 API 费用不会回滚；因此正式大批量运行通常建议采用方式 A。
 
-## 第四步（可选）：HH-instruction 越狱增强
+## 第四步（可选）：HH-instruction 越狱
 
-### 选择方法和准备依赖
+越狱阶段读取本次运行的 HH-instruction 题目，为每条源题生成对应的越狱文本和图片。
+本节使用 FigStep，运行配置沿用 `$CONFIG`。
 
-在生成 benchmark 使用的同一份 YAML 中添加：
+### 选择越狱方法
+
+在运行配置中设置：
 
 ```yaml
 augmentation:
   enabled: true
-  method: [figstep, qr, camo, mml_wr, mml_mirror, mml_rotate, himrd, cs_dj, visual_roleplay, si, viscra]
-
-response:
-  enabled: true
-  mode: image_text
-  datasets: [base, enabled_augmentations]
+  method: [figstep]
 ```
 
-`method` 是方法名列表，删除某一项即可关闭该方法。主配置的 `augmentation` 块只接受 `enabled` 和 `method`，
-字号、辅助模型和本地资源路径在 `value_eval/augmentation/methods/<method>/config.yaml`
-中修改。`run-all` 要求 `generation.profiles` 包含 `hh`、`generation.styles` 包含
-`instruction`；可以继续生成 HH/BH × awareness/instruction 四类原题。
+输入为 `outputs/<execution_run_id>/benchmark/hh/benchmark.json` 中的 instruction 条目，
+由第二步生成。FigStep 将问题排成文字图，无需原始图片或辅助模型。
+其他方法的资源要求和参数入口见[越狱配置表](docs/CONFIGURATION.md#augmentation)。
 
-| 方法名 | 处理方式 | 需要原 HH 图 | 额外准备 |
-| --- | --- | --- | --- |
-| `figstep` | 问题和空编号排成文字图 | 否 | 无 |
-| `qr` | 原图底部添加关键词，改写文本问题 | 是 | 辅助文本 API |
-| `camo` | 文本遮字、算术线索与图片字符索引 | 是 | 辅助文本 API |
-| `mml_wr` | 词语替换后排版，保留还原字典 | 否 | NLTK 英文词性标注数据 |
-| `mml_mirror` | 问题文字图水平镜像 | 否 | 无 |
-| `mml_rotate` | 问题文字图旋转 180° | 否 | 无 |
-| `himrd` | 将问题片段移到原图顶部，文本保留占位符 | 是 | 辅助文本 API |
-| `cs_dj` | 9 张干扰图与 3 张子问题图拼成一张图 | 否 | 辅助文本 API、本地 CLIP 和干扰图库 |
-| `visual_roleplay` | 角色文字、额外生成的角色图与原问题拼接 | 否 | 辅助文本 API、当前生图后端 |
-| `si` | 打乱原图图块及问题词序，底部添加关键词 | 是 | 辅助文本 API |
-| `viscra` | 注意力定位遮挡区域，底部添加关键词 | 是 | 辅助文本 API、本地 Qwen2.5-VL |
-
-统一依赖使用 `requirements.txt`；MML_WR 自动读取项目内
-`value_eval/augmentation/assets/nltk_data/` 的词性标注数据，无需设置 `NLTK_DATA`。
-CS-DJ 和 VisCRA 需在各自方法配置中填写当前机器的
-资源路径。辅助 API 默认使用 `qwen3.5-35b-a3b`，失败后回退 `deepseek-v4-flash`，
-继承主配置中的服务连接。详细参数与资源准备见 [增强文档](docs/AUGMENTATION.md)
-和 [部署说明](docs/DEPLOYMENT.md)。
-
-### 预检和小样本生成
-
-以下命令使用已有验证 run；如果 benchmark 来自其他配置，将路径替换为该配置。
-分阶段命令必须保持相同 `run.id` 和 `--style`，单 instruction run 使用 `--style instruction`。
+### 生成与采集
 
 ```bash
-# 检查所有启用方法的源题、原图及本地配置，不调用模型。
-python -m value_eval generate-augmentations \
-  --config configs/excel_to_benchmark_figstep_check.yaml --style both --dry-run
+# 检查源题、方法配置与字体。
+python -m value_eval generate-augmentations --config "$CONFIG" --style both --method figstep --dry-run
 
-# 先为一条 HH-instruction 生成 FigStep 和 QR。
-python -m value_eval generate-augmentations \
-  --config configs/excel_to_benchmark_figstep_check.yaml --style both \
-  --method figstep --method qr --max-items 1
+# 为全部 HH-instruction 源题生成 FigStep 样本。
+python -m value_eval generate-augmentations --config "$CONFIG" --style both --method figstep
 
-# 为全部 HH-instruction 补齐所有已启用方法。
-python -m value_eval generate-augmentations \
-  --config configs/excel_to_benchmark_figstep_check.yaml --style both
+# 采集 FigStep 样本的目标模型回应。
+python -m value_eval collect-responses --config "$CONFIG" --style both --response-mode image_text --dataset figstep
 ```
 
-`--method` 只能选择主配置中已启用的方法，可以重复传入。`--max-items` 按源题数限制；
-未覆盖全部源题时方法状态为 `partial`，需要去掉限制补齐后才能采集该方法的回应。
-独立预检不加载模型权重，也不验证 API 可用性；通过后仍需做小样本运行。
+`--method` 指定本次执行的越狱方法，方法名须已列入运行配置的 `augmentation.method`，
+且 `augmentation.enabled` 为 `true`。选择多种方法时，为每种方法分别写一个参数，
+例如 `--method figstep --method qr`；省略 `--method` 时执行配置中全部已启用的方法。
+小批次可用 `--max-items N` 限制源题数，正式采集前移除限制并完成该方法的全部源题。
 
-### 数量与输出
+### 检查结果
 
-当前每种方法为每条 HH-instruction 生成一条增强样本。原始集 N 条、HH-instruction H 条、
-启用 M 种方法时，全部成功后的完整集为 `N + H × M` 条。验证配置每个 profile 最多
-4 条，生成满额时为 8 条原题、2 条 HH-instruction，全部 11 种增强后为 `8 + 2 × 11 = 30` 条。
+| 产物 | 检查内容 |
+| --- | --- |
+| `augmentations/figstep/samples.jsonl` | 每条源题对应一个越狱样本，保留来源 ID |
+| `augmentations/figstep/images/` | 文字完整、图片可读取 |
+| `augmentations/figstep/manifest.json` | `status: completed`，完成源题数等于总源题数 |
+| `responses/<target>/image_text/augmentations/figstep.jsonl` | 目标模型的原始回应 |
 
-增强写入 `augmentations/<method>/`，完整集索引写入 `dataset/manifest.json`；原 benchmark
-不被改写。中断后重跑相同命令会复用已完成条目。对已有 run 仅添加增强时使用独立命令，
-因为重新执行 benchmark 或 `run-all` 仍会检查主 YAML 的 checkpoint 指纹。
+全部启用方法完成后，`dataset/manifest.json` 汇总原题与越狱子集。
+每种方法每条源题生成一个样本，总数为“原题数 + HH-instruction 数 × 方法数”。
+续跑与配置变更规则见[缓存与恢复](docs/PIPELINE.md#缓存与恢复)。
 
 ## 可选：采集目标模型回应
 
-原始集支持下面四种回应模式；11 种增强集均只支持 `image_text`。默认
-`response.datasets: [base, enabled_augmentations]` 采集原题和全部已启用增强；只采集原题
-可设置 `[base]`，只采集指定增强可设置 `[qr, si]`。
+原始集支持下表四种模式，越狱样本集只支持 `image_text`。`response.datasets` 默认
+`[base, enabled_augmentations]`，也可选择 `[base]` 或具体已启用方法。命令行可通过多个
+`--dataset` 选择多个数据集，例如 `--dataset base --dataset figstep`。
 
 回应采集同时支持开放式和 MCQ。`generation.styles` 决定 benchmark 是 awareness、instruction
 还是 both；`response.mode` 独立决定发送真实图片还是图片描述，以及要求开放回答还是选项字母。
@@ -576,7 +467,7 @@ python -m value_eval generate-augmentations \
 | `description_text` | `image_description` + question | 开放式回答，不发送选项 | 否 |
 | `description_mcq` | `image_description` + question + A/B/C/D | 严格返回一个选项字母 | 否 |
 
-在同一份 YAML 中配置目标模型和模式：
+回应阶段读取本次运行配置中的目标模型和模式：
 
 ```yaml
 response:
@@ -584,6 +475,7 @@ response:
   target_model: target
   # 四选一：image_text、image_mcq、description_text、description_mcq。
   mode: image_text
+  datasets: [base] # 此示例只采集原题；包含越狱时使用 image_text。
   concurrency: 3
   continue_on_error: true
 
@@ -600,17 +492,13 @@ models:
 
 ```bash
 python -m value_eval collect-responses \
-  --config configs/prepared_scenarios.yaml \
+  --config "$CONFIG" \
   --style both
 ```
 
-无需修改 YAML，即可让被评测模型分别跑一条真实图片开放式和一条真实图片 MCQ。把下面的
-`CONFIG` 设置为生成该 benchmark 时使用的同一份配置；两条命令会选择相同的首条 benchmark，
-并写入互不覆盖的 mode 目录：
+以下命令分别对同一条原题采集开放式和 MCQ 回应，结果写入各自的 mode 目录：
 
 ```bash
-CONFIG=configs/prepared_scenarios.yaml
-
 # 开放式：发送图片和 question，不发送选项。
 python -m value_eval collect-responses \
   --config "$CONFIG" \
@@ -619,7 +507,7 @@ python -m value_eval collect-responses \
   --dataset base \
   --max-items 1
 
-# MCQ：只选择原始集，发送图片、question 和 A/B/C/D。
+# MCQ：发送图片、question 和 A/B/C/D，要求返回一个选项字母。
 python -m value_eval collect-responses \
   --config "$CONFIG" \
   --style both \
@@ -636,8 +524,8 @@ RUN_ID=my_run
 tail -f "logs/${RUN_ID}/pipeline.log"
 ```
 
-已完成的 sample 会按 mode 独立断点复用；重跑相同命令不会再次调用 API。只有确认要覆盖已有
-回应时才添加 `--force`。
+已完成的 sample 会按 mode 独立断点复用；重跑相同命令不会再次调用 API。明确需要重新采集时
+才添加 `--force`；新回应追加到 JSONL，旧记录不会删除。
 
 所有 benchmark item 内部都保留四个选项和参考答案，但开放式模式不会发送选项；四种模式均
 不会发送参考答案、rationale、风险 profile 或生成 trace。MCQ 模式当前也只原样保存模型输出，
@@ -647,37 +535,20 @@ tail -f "logs/${RUN_ID}/pipeline.log"
 `response`、`reasoning_content`、usage、耗时和 request ID，不运行 judge 或自动评分。不同
 mode 使用不同子目录，因此可对同一 benchmark 分别采集开放式和 MCQ 回应。
 
-增强完成后可单独采集回应：
-
-```bash
-python -m value_eval collect-responses \
-  --config configs/excel_to_benchmark_figstep_check.yaml --style both \
-  --response-mode image_text --dataset enabled_augmentations
-```
-
-重复 `--dataset` 可选择多个方法，例如 `--dataset qr --dataset si`。目标请求使用增强样本
-的 `input.text` 和 `input.images`；原题答案、选项与风险审计留在来源记录中。
-增强回应单独写入 `responses/<target>/image_text/augmentations/<method>.jsonl`，可通过
-`source_benchmark_id` 与原题回应配对。
+越狱样本的回应位于 `responses/<target>/image_text/augmentations/<method>.jsonl`，通过
+`source_benchmark_id` 关联原题。该方法须全量完成，即使回应只采一条也会检查完整性。
 
 ## 一次运行完整流程
 
-配置全部确认后可以运行：
+输入、模型、图片后端、越狱方法和回应数据集配置完成后，可按顺序执行所有启用阶段：
 
 ```bash
-# 从 Excel 开始
-python -m value_eval run-all --config configs/excel_to_benchmark.yaml --style both
-
-# 从 prepared 场景开始
-python -m value_eval run-all --config configs/prepared_scenarios.yaml --style both
-
-# 从 Excel 开始，生成四类原题、全部 11 种增强并采集原始回应。
-python -m value_eval run-all --config configs/excel_to_benchmark_figstep_check.yaml --style both
+python -m value_eval run-all --config "$CONFIG" --style both
 ```
 
-首次运行建议按上述步骤分阶段执行，先检查 benchmark，再确认图片与增强产物。
-启用增强时，`run-all` 按“benchmark → 图片 → 增强 → 回应”执行；
-`response.enabled: false` 只跳过最后的回应阶段。
+Excel 路线先准备场景，prepared 路线从 benchmark 开始，随后依次生成图片和越狱样本，再采集回应。
+启用越狱时，生成范围应包含 `hh` 和 `instruction`；`response.enabled: false` 时流程在数据生成后结束。
+验收使用下文的阶段计数，并抽查题目、图片及回应。
 
 ## 常用控制参数
 
@@ -686,9 +557,9 @@ python -m value_eval run-all --config configs/excel_to_benchmark_figstep_check.y
 | `--dry-run` | 只检查输入和配置，不发请求 |
 | `--style MODE` | benchmark 题型：`both`、`awareness` 或 `instruction` |
 | `--response-mode MODE` | 临时覆盖回应模式：`image_text`、`image_mcq`、`description_text` 或 `description_mcq` |
-| `--method NAME` | 仅用于 `generate-augmentations`；选择已启用方法，可重复传入 |
-| `--dataset NAME` | 用于 `collect-responses` / `run-all`；选择 `base`、`enabled_augmentations` 或已启用方法，可重复传入 |
-| `--max-items N` | 限制当前阶段数量；独立增强按 HH-instruction 源题数，回应按所选集的总样本数；`both` benchmark 要求偶数 |
+| `--method NAME` | 仅用于 `generate-augmentations`，从配置已启用的方法中选择本次执行范围；多选示例：`--method figstep --method qr`；省略时执行全部已启用方法 |
+| `--dataset NAME` | 指定 `collect-responses` 或 `run-all` 采集回应的数据集：`base`、`enabled_augmentations` 或已启用的方法名；多选示例：`--dataset base --dataset figstep` |
+| `--max-items N` | benchmark / run-all 按每个 profile 题数，图片按每个 profile 任务数，越狱按源题数，回应按所选集总样本数；both benchmark 要求偶数，不限制 Excel 场景准备范围 |
 | `--variants-per-scenario N` | 覆盖每个场景的独立生成变体数；0 保持 element-once 模式 |
 | `--force` | 忽略对应阶段 checkpoint 并重新生成 |
 | `--retry-fallbacks` | 重试此前因模型错误而降级的场景 |
@@ -714,28 +585,24 @@ outputs/<execution_run_id>/
 │   ├── files/
 │   └── manifest.json
 ├── augmentations/<method>/
-│   ├── images/<sample_id>.png
-│   ├── preparation/                 # 辅助文本、角色图等中间结果，按需生成
-│   ├── resources/                   # CS-DJ 的 CLIP 向量缓存
+│   ├── images/
 │   ├── samples.jsonl
 │   ├── manifest.json
-│   └── config.snapshot.yaml
-├── dataset/manifest.json            # 原始集与当前启用增强集的索引
-└── responses/<target>/<mode>/
-    ├── <profile>.jsonl
-    └── augmentations/<method>.jsonl
+│   ├── config.snapshot.yaml
+│   └── preparation/、resources/  # 按需产生的中间缓存
+├── dataset/manifest.json        # 启用越狱时产生的数据集索引
+└── responses/
+    ├── manifest.json           # 最近一次回应采集计数
+    └── <target>/<mode>/
+        ├── <profile>.jsonl
+        └── augmentations/<method>.jsonl
 ```
 
 只有完整 HH/BH、双风格的 4000 条正式产物使用兼容文件名 `benchmark_4000.json`；单风格和
 小样本文件名包含实际条数与模式。
 
 回应文件只保存发给目标模型的输入摘要和原始输出，不进行评判。
+验收还应确认图片无失败、越狱样本完整，以及回应的 `completed + resumed == sample_count`
+且 `failed/skipped` 为 0；总 run 的 `completed` 不代表每条成功。分阶段运行不生成总 run 清单。
 
-## 测试
-
-```bash
-python -m unittest discover -s tests -v
-python -m compileall -q value_eval tests
-```
-
-新服务器交付步骤和检查项见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
+部署步骤与验收要求见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。

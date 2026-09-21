@@ -33,126 +33,35 @@ Excel 模式需要先成功执行 `prepare-scenarios`，或直接使用 `run-all
 
 ## 图片被审核拒绝
 
-API 后端默认尝试一次中性化改写，保留原有画面风格；只有通过独立 anchor 和风格校验的
-候选才提交生图。配置见 [审核拒绝后的提示词重试](CONFIGURATION.md#审核拒绝后的提示词重试)。
-图片 manifest 的 `moderation_retry` 保存原始拒绝、anchors、改写提示词、校验报告和请求 ID；
-`effective_prompt` 是实际提交的描述，原始 `prompt` 和 benchmark 不变。
+API 后端默认尝试一次保持视觉事实与风格的措辞改写，经独立校验后才提交；失败时仍标记
+`moderated`，不会伪造占位图片。检查 manifest 的 `moderation_retry` 和 `effective_prompt`。
+普通重跑不刷新已耗尽预算，`generate-images --force` 会重置所选任务，也会重做成功图片。
+参数见[审核重试](CONFIGURATION.md#审核重试)。
 
-改写后仍被拒绝、anchor 提取失败或候选不合格时，任务标为 `moderated`，其余图片继续。
-普通重跑不会刷新已耗尽的预算；检查历史后可用 `generate-images --force` 重置所选图片任务，
-或修改生成内容并使用新 `run.id`。`--force` 同时会重新生成所选的成功图片。
-`image.moderation_retry.enabled: false` 可关闭改写，恢复直接记录审核失败的行为。
-明确属于审核拒绝的 HTTP 403 按单条审核失败处理；鉴权、欠费及其他访问拒绝仍为致命错误。
+## 本地生图或 GPU 失败
 
-## 增强方法未启用或方法名错误
+确认 `image_backend`、`local_image.model_path`、完整权重及可见 GPU；预检不加载模型，
+不能证明显存充足。balanced 需搭配 `cpu_offload: none`；单卡卸载使用 `device_map: null`。
+原生 Windows 的 fcntl 导入错误应改在 WSL/Linux 运行。`scripts/run_pipeline.sh` 内部指定 GPU 7；
+需要选择其他 GPU 时，使用 `CUDA_VISIBLE_DEVICES` 配合 `python -m value_eval` 入口。
 
-`unknown augmentation method(s)` 表示名称未注册；名称区分大小写，使用
-`figstep`、`qr`、`camo`、`mml_wr`、`mml_mirror`、`mml_rotate`、`himrd`、`cs_dj`、
-`visual_roleplay`、`si`、`viscra`。`method` 必须为列表，不接受单个字符串或重复名称。
+## 越狱配置、资源或状态异常
 
-`augmentation method(s) not enabled` 表示 `--method` 或回应数据集选择了未启用方法。
-检查主 YAML 的 `augmentation.enabled: true` 及 `augmentation.method`。
-方法参数应写入各方法目录的 `config.yaml`，不能写入主 `augmentation` 块。
+| 现象 | 处理 |
+| --- | --- |
+| 方法未启用或名称错误 | 核对 `augmentation.enabled` 和方法列表；`--method` 不能启用列表外方法，参数放方法自己的 config.yaml |
+| 找不到源题或原图 | 确认同一 run.id 和 style、有 HH-instruction，以及所需原图的 manifest 关联和哈希；先补图 |
+| 辅助连接缺失或请求耗尽 | 主与回退连接均需配置；查方法 manifest 的错误，修复后续跑 |
+| MML_WR 的 NLTK LookupError | 补齐项目 assets/nltk_data 下的 averaged_perceptron_tagger_eng 数据 |
+| CS-DJ / VisCRA 失败 | 核对本机权重与图库路径、完整模型文件、窗口参数和设备资源 |
+| 方法 partial、回应 incomplete/stale | 去掉越狱的 max-items 限制补齐全量源题；回应只采一条也要求方法完整 |
+| 越狱不支持当前回应模式 | 越狱使用 image_text；原题 MCQ 或描述模式明确选择 `--dataset base` |
+| augmentation is already running | 等待持锁进程结束；正常退出后锁文件可能仍存在，不要删锁绕过互斥 |
 
-## 增强找不到 HH-instruction
+## 配置改动后指纹不匹配，或回应数量异常
 
-`run-all` 要求 generation 同时包含 `hh` 和 `instruction`，可以继续生成其他三类。
-独立增强则检查已有 `benchmark/hh/benchmark.json`，其中必须有 instruction 条目。
-确认配置指向源题所在 run，并沿用生成时的 `--style`；单 instruction 的目录有
-`--instruction` 后缀，不能用 `--style both` 读取。
-
-## 增强找不到原 HH 图片
-
-QR、CAMO、HIMRD、SI、VisCRA 需要有效原图。检查 `images/hh/manifest.json` 中是否有
-对应 `benchmark_id`、有效完成状态、图片路径及匹配 SHA256。使用生成该 benchmark 的
-同一配置和题型执行 `generate-images` 补图，再运行增强。单独复制 PNG 到目录中不会
-自动建立 manifest 关联；也不要删除哈希字段来绕过校验。
-
-## 辅助模型连接缺失或重试耗尽
-
-`requires a configured connection using ...` 表示方法配置中的主模型或回退模型无法在
-主 YAML 的 `models` 找到同名模型或相同 `api_key_env` 连接；即使主模型可用，回退连接
-也需配置。默认使用 `DASHSCOPE_API_KEY` 与 `DEEPSEEK_API_KEY`，密钥值写入 `.env`。
-
-`augmentation auxiliary exhausted primary and fallback` 表示请求或结果校验在两组模型
-均已耗尽尝试。默认每个模型为首次加 2 次重试，共最多 6 次请求。检查终端、日志和
-`augmentations/<method>/manifest.json` 的失败 entry，区分连接、鉴权、空回复和结构错误。
-CS-DJ 必须返回三条编号子问题；HIMRD 必须能由文本与视觉片段还原源题。修复原因后重跑
-所选方法即可，其他成功条目会复用。
-
-## NLTK 词性标注数据缺失
-
-MML_WR 的 `LookupError` 若提及 `averaged_perceptron_tagger_eng`，请检查项目内
-`value_eval/augmentation/assets/nltk_data/taggers/averaged_perceptron_tagger_eng/`
-是否完整。该目录由 MML_WR 自动加载，无需设置 `NLTK_DATA`。缺失时，在联网机器的
-项目根目录、运行项目的同一环境执行：
-
-```bash
-python -m nltk.downloader -d value_eval/augmentation/assets/nltk_data averaged_perceptron_tagger_eng
-```
-
-离线服务器随项目复制该数据目录；自定义存放位置时用 `NLTK_DATA` 指定数据根目录。
-预检和增强生成不会自动下载这些资源。
-
-## CS-DJ 图库或 CLIP 加载失败
-
-检查 `methods/cs_dj/config.yaml` 的 `src_dir`、`clip_path` 和 `device`。图库只扫描第一层
-JPG/JPEG/PNG/WebP，不递归子目录；选中候选数至少为 9，`num_images` 也不能限制到 9 以下。
-CLIP 路径必须包含完整本地模型和预处理资源，仅有 `config.json` 可能通过预检但无法推理。
-固定拼图要求 `max_pairs_per_question: 9`。
-
-## VisCRA 本地模型或显存错误
-
-检查 `attention_model_path` 指向完整 Qwen2.5-VL 目录，GPU 对当前进程可见，依赖与
-`requirements.txt` 一致。预检只读取配置，不加载权重，不能证明显存充足。
-默认模型按源图分辨率作 patch 对齐；2048 原图比 512 原图需要更多显存。
-多卡权重分配的每卡 8 GiB 预算不代表推理峰值，也不会拆分单个注意力算子。
-
-使用空闲且资源充足的可见卡，避免与其他大模型任务竞争。检查窗口参数是否能放入网格：
-默认 512×512 使用 18×18 网格和 5×5 窗口，2048×2048 使用 73×73 网格和 24×24 窗口。
-若无有效注意力或网格不匹配，方法会失败，不生成随机遮挡作为替代。
-
-## 文字溢出或 SI 分块失败
-
-FigStep 和 MML 在最小字号下仍放不下完整内容时会报错。调整方法配置中的画布尺寸、
-最大/最小字号等排版参数后重跑；不应截断原题。SI 的原图宽、高必须都能被
-`blocks_per_side` 整除，默认值为 2。
-
-QR、HIMRD、SI、VisCRA 的文字面板在原图之外增加高度，因此最终图片高于原图是正常
-产物。VisualRoleplay 的角色图须符合当前生图后端尺寸，最终图再增加上下文字面板。
-
-## 数据集是 partial，或回应拒绝 incomplete/stale
-
-先检查 `dataset/manifest.json` 的 `subsets`。原始集缺图会使总状态为 `partial`；
-任一已启用方法未全量完成、配置过期或文件损坏时，该子集为 `unavailable`。
-已完成源题数量和具体错误在对应方法的 manifest 中。
-
-增强 `--max-items 1` 只生成首条源题，不代表该方法已经完整。去掉限制补齐所需方法：
-
-```bash
-python -m value_eval generate-augmentations \
-  --config configs/excel_to_benchmark_figstep_check.yaml --style both --method qr
-```
-
-方法只有全量完成才能采集回应，`collect-responses --max-items 1` 也不会跳过此检查。
-若只需要 QR 回应，可用 `--dataset qr`；完整 `run-all` 则要求所有已启用子集都就绪。
-
-## 增强不支持当前回应模式
-
-全部 11 种增强只支持 `image_text`。采集增强时将模式改为 `image_text`，并确认 target
-设置 `supports_images: true`。采集原题 MCQ 或描述模式时选择 `--dataset base`，避免
-默认的 `enabled_augmentations` 一同进入不兼容模式。
-
-## 增强写锁、配置变化与 force
-
-`augmentation is already running` 表示另一个进程正持有该方法的写锁，等待其完成后重试。
-`.generation.lock` 文件在正常结束后仍可存在，锁随文件句柄释放；不要删除锁文件来启动
-第二个并发写进程。
-
-给已有 run 添加增强后若 benchmark 报配置 fingerprint 不匹配，直接使用
-`generate-augmentations` 补做即可，无需重建 benchmark。方法参数、字体或代码变化会
-使对应增强重新生成，目标文字或图片变化也会使旧回应缓存键失效。
-
-`--force` 重建本次所选方法与源题的最终条目，但辅助准备、角色图和 CLIP 向量仍按各自
-指纹复用。因此强制重建时没有新增辅助 API 或生图请求，不一定是故障。
-详细恢复规则见 [增强文档](AUGMENTATION.md#缓存与恢复)。
+主 YAML 内容参与 benchmark 指纹，连注释改动也会影响恢复；恢复原配置或使用新 run.id。
+为已有 run 生成越狱样本时直接执行 `generate-augmentations`；方法 force 只重建最终条目，
+匹配的辅助准备缓存仍会复用。回应 JSONL 包含历史重试和强制重采，统计时按 sample_key
+筛选当前输入与批次。总 run 显示 completed 时仍需核对图片及回应失败数，见
+[验收规则](DATA_SCHEMA.md#回应历史与验收)。
