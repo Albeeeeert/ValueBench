@@ -84,7 +84,7 @@ image_backend: local # api 使用 image；local 使用 local_image。两组配�
 
 image:
   # true=benchmark 每个机制落盘后立即生成图；false=run-all 在 benchmark 完成后统一生成。
-  generate_during_benchmark: false
+  generate_during_benchmark: true
   api_key_env: DASHSCOPE_API_KEY # 图片 API Key 环境变量名。
   model: qwen-image-2.0
   size: 2048*2048
@@ -119,8 +119,10 @@ local_image:
   concurrency: 1 # 本地单模型串行推理，固定为 1。
 
 augmentation:
-  enabled: false # 对本次生成的 HH-instruction 增强；generation 仍可生成全部四类。
-  method: [figstep] # 参数位于 value_eval/augmentation/methods/figstep/config.yaml。
+  enabled: false # 改为 true 启用 HH-instruction 越狱增强。
+  # 仅增强 HH-instruction；generation 仍可生成 HH/BH × awareness/instruction 四类原题。
+  # 删除列表中的方法名可关闭对应方法；各方法参数位于 value_eval/augmentation/methods/<method>/config.yaml。
+  method: [figstep, qr, camo, mml_wr, mml_mirror, mml_rotate, himrd, cs_dj, visual_roleplay, si, viscra]
 
 response:
   enabled: true # false：run-all 生成图片后结束，跳过回答采集。
@@ -131,7 +133,7 @@ response:
   # description_mcq=图片描述+问题+A/B/C/D，只要求一个字母；不需要图片。
   # 参考答案/rationale 永不发送，采集后也不自动解析或评分。
   mode: image_text
-  datasets: [base, enabled_augmentations] # 可改为 [figstep]，仅采集增强集回应。
+  datasets: [base, enabled_augmentations] # 采集原题和已启用增强集；仅采集增强集时改为 [enabled_augmentations]。
   concurrency: 2
   continue_on_error: true # 普通单条失败是否继续。
 

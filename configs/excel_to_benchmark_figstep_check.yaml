@@ -84,7 +84,7 @@ image_backend: api # api 使用 image；local 使用 local_image。两组配置�
 
 image:
   # true=benchmark 每个机制落盘后立即生成图；false=run-all 在 benchmark 完成后统一生成。
-  generate_during_benchmark: false
+  generate_during_benchmark: true
   api_key_env: DASHSCOPE_API_KEY # 图片 API Key 环境变量名。
   model: qwen-image-2.0
   size: 2048*2048
