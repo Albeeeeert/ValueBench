@@ -45,25 +45,27 @@ python -m pip install -r requirements.txt
 ```
 
 `requirements.txt` 包含流水线、增强和本地生图依赖；`pyproject.toml` 使用同一清单，
-不再单独安装 `augmentation` 或 `local-image` extras。安装 Python 包不包含模型权重、
-NLTK 数据或 CS-DJ 干扰图库。
+不再单独安装 `augmentation` 或 `local-image` extras。项目内的 NLTK 数据随包分发；
+模型权重和 CS-DJ 干扰图库需另行准备。
 
 | 使用范围 | 部署时准备 |
 | --- | --- |
-| 全部方法 | 保留仓库内字体；FigStep 使用本方法 `assets/fonts/`，其他方法使用 `augmentation/assets/fonts/` |
+| 全部方法 | 保留仓库内共享字体 `augmentation/assets/fonts/` |
 | QR、CAMO、HIMRD、CS-DJ、VisualRoleplay、SI、VisCRA | 主配置提供 Qwen、DeepSeek 的连接和密钥环境变量，供辅助主模型与回退模型继承 |
-| MML_WR | NLTK 的 `averaged_perceptron_tagger_eng` 数据 |
+| MML_WR | 保留项目内 `value_eval/augmentation/assets/nltk_data/`，包含 `averaged_perceptron_tagger_eng` 数据 |
 | CS-DJ | 本地 CLIP 完整权重目录，以及第一层至少含 9 张可读取图片的图库 |
 | VisCRA | 本地 Qwen2.5-VL 完整权重、tokenizer 和图像预处理配置，默认使用 CUDA |
 | VisualRoleplay | 当前 `image_backend` 的 API 连接，或本地生图完整权重与运行环境 |
 
-MML_WR 数据在部署阶段安装，生成过程不会自动下载：
+MML_WR 自动读取项目内 `value_eval/augmentation/assets/nltk_data/`，路径不依赖当前工作
+目录，无需设置 `NLTK_DATA`。若数据缺失，在联网机器的项目根目录执行：
 
 ```bash
-python -m nltk.downloader averaged_perceptron_tagger_eng
+python -m nltk.downloader -d value_eval/augmentation/assets/nltk_data averaged_perceptron_tagger_eng
 ```
 
-离线机器需提前复制 NLTK 数据并设置 `NLTK_DATA`。CLIP、Qwen2.5-VL 和本地生图模型
+离线部署时随项目一起复制该数据目录即可；若将数据存放在其他位置，可用 `NLTK_DATA`
+指定数据根目录。增强生成不会自动下载 NLTK 数据。CLIP、Qwen2.5-VL 和本地生图模型
 均通过 `local_files_only=True` 读取，不会在运行中自动下载权重。
 
 当前模板含原机器的资源路径，复制后必须按所选方法修改：

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import os
@@ -8,11 +9,12 @@ import threading
 from concurrent.futures import CancelledError, Future, ThreadPoolExecutor, as_completed
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from PIL import Image, UnidentifiedImageError
 
-from ..config import LocalImageConfig, PipelineConfig
+from ..clients.openai_compat import OpenAICompatibleClient
+from ..config import ImageModerationRetryConfig, LocalImageConfig, PipelineConfig
 from ..io_utils import atomic_write_json, load_json, sha256_bytes, stable_id, utc_now
 from ..schemas import ImageTask
 from .client import (
@@ -22,6 +24,7 @@ from .client import (
     QwenImageConfig,
 )
 from .local_client import FatalLocalImageError, LocalQwenImageClient
+from .moderation import ModerationRecovery
 
 
 def _expected_size(value: str) -> tuple[int, int]:
@@ -128,6 +131,16 @@ class ImageGenerator:
             )
             client = QwenImageClient(image_config, logger=self.logger)
         self.client = client
+        self.moderation_recovery = None
+        if config.image_backend == "api":
+            retry = ImageModerationRetryConfig.from_mapping(raw.get("moderation_retry", {}), config.author_model)
+            if retry.enabled:
+                self.moderation_recovery = ModerationRecovery(
+                    retry,
+                    author=OpenAICompatibleClient(config.models[retry.model], logger=self.logger),
+                    validator=OpenAICompatibleClient(config.models[retry.validator_model], logger=self.logger),
+                    logger=self.logger,
+                )
         self.incremental_force = incremental_force
         self.concurrency = int(raw.get("concurrency", 1 if config.image_backend == "local" else 3))
         if self.concurrency < 1:
@@ -146,6 +159,9 @@ class ImageGenerator:
             json.dumps(self.generation_settings, sort_keys=True, ensure_ascii=False), length=64
         )
         self._incremental_lock = threading.Lock()
+        self._manifest_lock = threading.Lock()
+        self._batch_tasks: dict[str, list[ImageTask]] = {}
+        self._retry_snapshots: dict[tuple[str, str], dict[str, Any]] = {}
         self._incremental_executor: ThreadPoolExecutor | None = None
         self._incremental_tasks: dict[str, dict[str, ImageTask]] = {}
         self._incremental_futures: dict[Future[None], tuple[str, str]] = {}
@@ -173,6 +189,18 @@ class ImageGenerator:
         return self._profile_root(profile) / "manifest.json"
 
     def _save(self, profile: str, tasks: list[ImageTask]) -> None:
+        with self._manifest_lock:
+            self._save_manifest(profile, tasks)
+
+    def _save_manifest(self, profile: str, tasks: list[ImageTask]) -> None:
+        # Other workers may be updating their recovery histories. Serialize only
+        # immutable snapshots published by each worker at its own checkpoint.
+        rows = []
+        for task in tasks:
+            key = (profile, task.image_key)
+            if key not in self._retry_snapshots:
+                self._retry_snapshots[key] = copy.deepcopy(task.moderation_retry)
+            rows.append({**vars(task), "moderation_retry": self._retry_snapshots[key]})
         payload = {
             "schema_version": "value-eval-image-manifest-v1",
             "run_id": self.config.execution_run_id,
@@ -186,9 +214,17 @@ class ImageGenerator:
             "task_count": len(tasks),
             "completed_count": sum(task.status in ("generated", "reused") for task in tasks),
             "failed_count": sum(task.status in ("failed", "moderated", "aborted") for task in tasks),
-            "tasks": [task.as_dict() for task in tasks],
+            "tasks": rows,
         }
         atomic_write_json(self._manifest(profile), payload)
+
+    def _checkpoint(self, profile: str, task: ImageTask) -> None:
+        with self._incremental_lock:
+            self._retry_snapshots[(profile, task.image_key)] = copy.deepcopy(task.moderation_retry)
+            if profile in self._incremental_tasks:
+                self._save_incremental_profile(profile)
+            elif profile in self._batch_tasks:
+                self._save(profile, self._batch_tasks[profile])
 
     @staticmethod
     def _task_from_manifest(row: dict[str, Any], profile: str) -> ImageTask:
@@ -209,6 +245,8 @@ class ImageGenerator:
             request_ids=[str(value) for value in row.get("request_ids", [])],
             seed=int(row["seed"]) if row.get("seed") is not None else None,
             error=str(row.get("error", "")),
+            effective_prompt=str(row.get("effective_prompt", "")),
+            moderation_retry=dict(row.get("moderation_retry", {})),
         )
 
     def _load_incremental_tasks(self, profile: str) -> dict[str, ImageTask]:
@@ -274,8 +312,6 @@ class ImageGenerator:
                     return
                 if any(key == incoming.image_key for _, key in self._incremental_futures.values()):
                     return
-                task.status = "pending"
-                task.error = ""
             else:
                 task = incoming
                 tasks[task.image_key] = task
@@ -409,39 +445,46 @@ class ImageGenerator:
             for row in previous.get("tasks", [])
             if isinstance(row, dict) and row.get("image_key")
         }
-        expected = _expected_size(self.client.config.size)
         for task in tasks:
             old = old_tasks.get(task.image_key)
-            if not old or old.get("status") not in ("generated", "reused"):
+            if not old or old.get("prompt") != task.prompt or old.get("shared_image_id", "") != task.shared_image_id:
                 continue
-            path = self._profile_root(profile) / str(old.get("image_path", ""))
-            if not path.is_file():
-                continue
-            data = path.read_bytes()
-            image_format, width, height = probe_image(data)
-            if (width, height) != expected or sha256_bytes(data) != old.get("image_sha256"):
-                continue
-            if stable_id(task.prompt, length=64) != stable_id(str(old.get("prompt", "")), length=64):
-                continue
-            task.status = "reused"
-            task.attempts = int(old.get("attempts", 0))
-            task.image_path = str(path.relative_to(self._profile_root(profile)))
-            task.image_sha256 = sha256_bytes(data)
-            task.image_model = str(old.get("image_model", self.client.config.model))
-            task.image_format, task.width, task.height = image_format, width, height
-            task.request_ids = [str(value) for value in old.get("request_ids", [])]
-            task.seed = int(old["seed"]) if old.get("seed") is not None else None
+            restored = self._task_from_manifest(old, profile)
+            task.attempts, task.request_ids = restored.attempts, restored.request_ids
+            task.effective_prompt, task.moderation_retry = restored.effective_prompt, restored.moderation_retry
+            task.status, task.error = restored.status, restored.error
+            if self._saved_task_is_valid(profile, restored):
+                task.status, task.error = "reused", ""
+                task.image_path, task.image_sha256 = restored.image_path, restored.image_sha256
+                task.image_model, task.image_format = restored.image_model, restored.image_format
+                task.width, task.height, task.seed = restored.width, restored.height, restored.seed
+            elif task.status in ("generated", "reused"):
+                task.status = "pending"
+
+    def generate_bytes(self, task: ImageTask, checkpoint: Callable[[], None] | None = None) -> bytes:
+        """Shared generation entry point, also used by augmentation portraits."""
+        checkpoint = checkpoint or (lambda: None)
+        client = self.client.clone()
+        if isinstance(client, LocalQwenImageClient):
+            task.seed = client.config.seed
+        if self.moderation_recovery is not None:
+            return self.moderation_recovery.generate(client, task, checkpoint)
+        task.attempts += 1
+        task.effective_prompt = task.prompt
+        checkpoint()
+        try:
+            return client.generate(task.prompt)
+        finally:
+            task.request_ids = list(dict.fromkeys([*task.request_ids, *client.request_ids]))
+            checkpoint()
 
     def _generate(self, profile: str, task: ImageTask) -> None:
-        task.attempts += 1
+        task.image_path = task.image_sha256 = ""
         try:
-            client = self.client.clone()
-            if isinstance(client, LocalQwenImageClient):
-                task.seed = client.config.seed
-            data = client.generate(task.prompt)
+            data = self.generate_bytes(task, lambda: self._checkpoint(profile, task))
             image_format, width, height = probe_image(data)
-            if (width, height) != _expected_size(client.config.size):
-                raise ValueError(f"expected {client.config.size}, received {width}x{height}")
+            if (width, height) != _expected_size(self.client.config.size):
+                raise ValueError(f"expected {self.client.config.size}, received {width}x{height}")
             suffix = "jpg" if image_format == "jpeg" else image_format
             image_dir = self._profile_root(profile) / "files"
             image_dir.mkdir(parents=True, exist_ok=True)
@@ -459,9 +502,8 @@ class ImageGenerator:
             task.status = "generated"
             task.image_path = str(target.relative_to(self._profile_root(profile)))
             task.image_sha256 = sha256_bytes(data)
-            task.image_model = client.config.model
+            task.image_model = self.client.config.model
             task.image_format, task.width, task.height = image_format, width, height
-            task.request_ids = list(client.request_ids)
             task.error = ""
         except ImageModerationError as exc:
             task.status, task.error = "moderated", str(exc)
@@ -485,6 +527,9 @@ class ImageGenerator:
             if max_items > 0:
                 tasks = tasks[:max_items]
             self._restore(profile, tasks, force=force)
+            self._batch_tasks[profile] = tasks
+            for task in tasks:
+                self._retry_snapshots[(profile, task.image_key)] = copy.deepcopy(task.moderation_retry)
             self._save(profile, tasks)
             pending = [task for task in tasks if task.status != "reused"]
             executor = ThreadPoolExecutor(max_workers=self.concurrency)

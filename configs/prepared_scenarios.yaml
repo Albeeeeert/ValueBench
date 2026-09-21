@@ -80,6 +80,12 @@ image:
   max_retries: 3      # 普通失败重试次数。
   rate_limit_retries: 6 # 限流错误额外重试次数。
 
+  moderation_retry:
+    enabled: true       # 审核拒绝后仅调整措辞，保留原有画面风格；本地生图不使用。
+    model: author       # 改写模型，引用 models 中的别名。
+    validator_model: author # 独立请求提取和校验视觉 anchors。
+    max_rewrites: 1     # 仅一次中性化/同物体技术化改写，不切换绘制风格。
+
 local_image:
   generate_during_benchmark: false # false 时 run-all 会在 benchmark 完成后统一生成图片。
   model: Qwen-Image-2512

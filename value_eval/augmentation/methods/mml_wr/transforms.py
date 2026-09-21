@@ -1,9 +1,14 @@
 from __future__ import annotations
+from pathlib import Path
 from typing import Dict, Any, List
 import re, random
 
 def pos_tag(tokens):
+    import nltk.data
     from nltk import pos_tag as tag
+    data_dir = Path(__file__).resolve().parents[2] / "assets/nltk_data"
+    if data_dir.is_dir() and str(data_dir) not in nltk.data.path:
+        nltk.data.path.insert(0, str(data_dir))
     return tag(tokens)
 
 def TreebankWordTokenizer():

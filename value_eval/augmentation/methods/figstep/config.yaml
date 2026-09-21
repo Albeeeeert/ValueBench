@@ -6,7 +6,7 @@ runtime:
 
 parameters:
   # Relative to this config.yaml, independent of the working directory.
-  font_path: assets/fonts/ARIAL.TTF
+  font_path: ../../assets/fonts/ARIAL.TTF
   font_size: 18 # 自动排版的最大字号，从此值开始尝试。
   auto_fit: true # 按实际像素宽度换行，高度不足时减小字号及行间距。
   min_font_size: 10 # 最小允许字号；仍放不下时明确报错，不截断原文。

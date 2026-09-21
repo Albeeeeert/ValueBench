@@ -425,9 +425,17 @@ image:
   timeout_sec: 120
   max_retries: 3
   rate_limit_retries: 6
+  moderation_retry:
+    enabled: true
+    model: author
+    validator_model: author
+    max_rewrites: 1
 ```
 
 `api_key_env` 填环境变量名称，真实密钥写在 `.env`。`size` 必须和服务实际返回尺寸一致。
+API 提示词被审核拒绝时，仅尝试一次中性化措辞及同物体的技术化表述，保留原有画面风格，
+通过独立的视觉 anchor 和风格校验后才提交。原始描述保留，实际提示词和重试历史写入图片 manifest；普通重跑
+不重置已耗尽的预算。详见[审核重试配置](docs/CONFIGURATION.md#审核拒绝后的提示词重试)。
 
 ### 方式 A：Benchmark 完成后人工生成
 
@@ -511,8 +519,9 @@ response:
 | `si` | 打乱原图图块及问题词序，底部添加关键词 | 是 | 辅助文本 API |
 | `viscra` | 注意力定位遮挡区域，底部添加关键词 | 是 | 辅助文本 API、本地 Qwen2.5-VL |
 
-统一依赖使用 `requirements.txt`；MML_WR 另需安装
-`averaged_perceptron_tagger_eng`，CS-DJ 和 VisCRA 需在各自方法配置中填写当前机器的
+统一依赖使用 `requirements.txt`；MML_WR 自动读取项目内
+`value_eval/augmentation/assets/nltk_data/` 的词性标注数据，无需设置 `NLTK_DATA`。
+CS-DJ 和 VisCRA 需在各自方法配置中填写当前机器的
 资源路径。辅助 API 默认使用 `qwen3.5-35b-a3b`，失败后回退 `deepseek-v4-flash`，
 继承主配置中的服务连接。详细参数与资源准备见 [增强文档](docs/AUGMENTATION.md)
 和 [部署说明](docs/DEPLOYMENT.md)。

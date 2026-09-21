@@ -20,6 +20,5 @@ where = ["."]
 include = ["value_eval*"]
 
 [tool.setuptools.package-data]
-"value_eval.augmentation.methods.figstep" = ["config.yaml", "assets/fonts/*.TTF"]
-"value_eval.augmentation" = ["assets/fonts/*.TTF"]
+"value_eval.augmentation" = ["assets/fonts/*.TTF", "assets/nltk_data/**/*"]
 "*" = ["config.yaml"]

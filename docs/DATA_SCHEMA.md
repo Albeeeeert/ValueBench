@@ -67,6 +67,23 @@ instruction，两者 `image_description`、视觉模式和目标场景一致。�
 
 所有 `source_path`、`source_benchmark` 和 `image_path` 均使用项目或 run 内相对路径。
 
+## 图片任务的审核恢复记录
+
+`images/<profile>/manifest.json` 的每个任务保留原始 `prompt`，并增加：
+
+| 字段 | 含义 |
+| --- | --- |
+| `effective_prompt` | 最近一次实际提交给生图模型的提示词；成功时即生成该图片的提示词 |
+| `moderation_retry.original` | 原提示词的请求状态、错误和请求 ID |
+| `moderation_retry.anchors` | 从原始描述提取的不可变视觉事实及原文证据、精确可见文字 |
+| `moderation_retry.rewrites` | 改写的状态、候选提示词、改写响应、独立校验报告、请求 ID 和时间；新任务最多一次中性化改写 |
+| `moderation_retry.exhausted` | 已用完当前改写额度且未成功 |
+| `attempts` | 生图调用次数，包含审核恢复；不包含客户端内部的 HTTP 重试或文本模型调用 |
+
+本地后端或关闭恢复的新任务中，`moderation_retry` 为空；已有任务的历史仍保留。
+旧 manifest 缺少这些字段仍可读取。
+VisualRoleplay 的 `preparation/*-portrait.json` 通过 `task` 字段保存相同恢复记录。
+
 ## 增强样本
 
 增强不改写原始 BenchmarkItem。`augmentations/<method>/samples.jsonl` 每行是一个

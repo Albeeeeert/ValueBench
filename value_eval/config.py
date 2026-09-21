@@ -163,6 +163,30 @@ def _redact_mapping(value: dict[str, Any]) -> dict[str, Any]:
 
 
 @dataclass(frozen=True)
+class ImageModerationRetryConfig:
+    enabled: bool = True
+    model: str = "author"
+    validator_model: str = "author"
+    max_rewrites: int = 1
+
+    @classmethod
+    def from_mapping(cls, raw: Any, default_model: str) -> "ImageModerationRetryConfig":
+        raw = _mapping(raw, "image.moderation_retry")
+        unknown = set(raw) - {"enabled", "model", "validator_model", "max_rewrites"}
+        if unknown:
+            raise ValueError(f"unknown image.moderation_retry fields: {sorted(unknown)}")
+        enabled = raw.get("enabled", True)
+        limit = raw.get("max_rewrites", 1)
+        if not isinstance(enabled, bool):
+            raise ValueError("image.moderation_retry.enabled must be a boolean")
+        if type(limit) is not int or limit != 1:
+            raise ValueError("image.moderation_retry.max_rewrites must be 1")
+        model = str(raw.get("model", default_model)).strip()
+        validator = str(raw.get("validator_model", model)).strip()
+        return cls(enabled, model, validator, limit)
+
+
+@dataclass(frozen=True)
 class ScenarioSourceConfig:
     """Excel 到场景阶段的全部公开配置。路径均相对项目根目录解析。"""
 
@@ -365,6 +389,14 @@ class PipelineConfig:
         image_backend = str(raw.get("image_backend", "api")).strip().lower()
         if image_backend not in {"api", "local"}:
             raise ValueError("image_backend must be api or local")
+        if image_backend == "api":
+            retry = ImageModerationRetryConfig.from_mapping(
+                _mapping(raw.get("image", {}), "image").get("moderation_retry", {}), author
+            )
+            if retry.enabled:
+                for name in (retry.model, retry.validator_model):
+                    if name not in models:
+                        raise ValueError(f"image moderation retry model alias is not defined: {name}")
         local_image = _mapping(raw.get("local_image", {}), "local_image")
         if image_backend == "local":
             LocalImageConfig.from_mapping(local_image, root)

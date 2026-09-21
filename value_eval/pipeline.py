@@ -6,7 +6,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from .config import LocalImageConfig, PipelineConfig
+from .config import ImageModerationRetryConfig, LocalImageConfig, PipelineConfig
 from .augmentation.registry import load_method
 from .augmentation.runner import AugmentationRunner, load_sources, publish_dataset, response_datasets, validate_generation_scope
 from .generation.input_loader import (
@@ -97,6 +97,10 @@ def inspect_pipeline(config: PipelineConfig) -> dict[str, Any]:
             config.scenario_source.stage1_model,
             config.scenario_source.element_model,
         })
+    if config.image_backend == "api":
+        retry = ImageModerationRetryConfig.from_mapping(config.image.get("moderation_retry", {}), config.author_model)
+        if retry.enabled:
+            required_aliases.update((retry.model, retry.validator_model))
     required_envs = sorted({config.models[alias].api_key_env for alias in required_aliases})
     local_image_status = None
     if config.image_backend == "api":

@@ -275,15 +275,16 @@ class AugmentationTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "overflows"):
             method.generate(source, "long", self.root / "overflow")
         self.assertFalse((self.root / "overflow/images/long.png").exists())
-        copied = self.root / "copied-method"
-        shutil.copytree(PACKAGE_ROOT / "value_eval/augmentation/methods/figstep", copied)
-        portable = FigStep(copied / "config.yaml")
-        self.assertTrue(portable.font_path.is_relative_to(copied))
-        raw_method = yaml.safe_load((copied / "config.yaml").read_text())
+        copied = self.root / "copied-augmentation"
+        shutil.copytree(PACKAGE_ROOT / "value_eval/augmentation", copied)
+        copied_config = copied / "methods/figstep/config.yaml"
+        portable = FigStep(copied_config)
+        self.assertEqual(portable.font_path, copied / "assets/fonts/ARIAL.TTF")
+        raw_method = yaml.safe_load(copied_config.read_text())
         raw_method["parameters"]["font_path"] = "missing-font.ttf"
-        (copied / "config.yaml").write_text(yaml.safe_dump(raw_method))
+        copied_config.write_text(yaml.safe_dump(raw_method))
         with self.assertRaises(OSError):
-            FigStep(copied / "config.yaml")
+            FigStep(copied_config)
         with method_lock(self.root / "lock"):
             with self.assertRaisesRegex(RuntimeError, "already running"):
                 with method_lock(self.root / "lock"):

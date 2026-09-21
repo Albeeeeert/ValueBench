@@ -73,23 +73,28 @@ class QwenImageClient:
         error = data.get("error")
         if not isinstance(error, dict) or not error:
             error = data
-        return str(error.get("code", "")), str(error.get("message", ""))[:500]
+        return str(error.get("code") or error.get("type") or ""), str(error.get("message", ""))[:500]
 
     @staticmethod
     def _fatal(status: int, code: str, message: str) -> bool:
         combined = f"{code} {message}".lower()
-        return status in (401, 402, 403) or any(
+        return status in (401, 402) or any(
             marker in combined
             for marker in (
-                "invalid api key", "unauthorized", "forbidden", "arrearage",
-                "insufficient balance", "allocationquota", "quota exhausted",
+                "invalid api key", "invalid_api_key", "unauthorized", "arrearage",
+                "insufficient balance", "insufficient_balance", "insufficient_quota",
+                "allocationquota", "quota exhausted",
             )
         )
 
     @staticmethod
     def _moderated(code: str, message: str) -> bool:
         combined = f"{code} {message}".lower()
-        return any(marker in combined for marker in ("inspection", "moderation", "policy", "sensitive"))
+        return any(marker in combined for marker in (
+            "inspection", "moderation", "sensitive", "content_filter", "contentfilter",
+            "content filter", "content_policy", "content policy", "contentpolicy", "safety",
+            "审核", "敏感", "内容违规", "内容安全",
+        ))
 
     def _request(self, method: str, url: str, **kwargs: Any) -> dict[str, Any]:
         last_error: Exception | None = None
@@ -104,11 +109,22 @@ class QwenImageClient:
                 retry_limit = self.config.max_retries
             else:
                 code, message = self._error(response)
+                try:
+                    body = response.json()
+                except ValueError:
+                    body = {}
+                request_id = str((body.get("request_id") if isinstance(body, dict) else "")
+                                 or response.headers.get("x-request-id", ""))
+                if request_id:
+                    self.request_ids.append(request_id)
                 if self._fatal(status, code, message):
-                    raise FatalImageApiError(f"image API authentication or billing failure: {code or status}")
+                    raise FatalImageApiError(f"image API authentication or billing failure: {code or status}: {message}")
+                has_error = isinstance(body, dict) and bool(body.get("error"))
+                if (status >= 400 or has_error or code not in ("", "OK", "200")) and self._moderated(code, message):
+                    raise ImageModerationError(f"image prompt rejected: {code or status}: {message}")
+                if status == 403:
+                    raise FatalImageApiError(f"image API access denied: {code or status}: {message}")
                 if status >= 400:
-                    if self._moderated(code, message):
-                        raise ImageModerationError(f"image prompt rejected: {code or message}")
                     last_error = ImageApiError(f"HTTP {status} {code}: {message}")
                     retry_limit = self.config.rate_limit_retries if status == 429 else self.config.max_retries
                     if status not in (408, 409, 429) and status < 500:
@@ -122,15 +138,8 @@ class QwenImageClient:
                     else:
                         if not isinstance(data, dict):
                             raise ImageApiError("image API response must be an object")
-                        code = str(data.get("code", ""))
-                        message = str(data.get("message", ""))
-                        if code and code not in ("OK", "200"):
-                            if self._moderated(code, message):
-                                raise ImageModerationError(f"image prompt rejected: {code}")
+                        if has_error or (code and code not in ("OK", "200")):
                             raise ImageApiError(f"image API error {code}: {message[:500]}")
-                        request_id = str(data.get("request_id") or response.headers.get("x-request-id", ""))
-                        if request_id:
-                            self.request_ids.append(request_id)
                         return data
             if attempt + 1 >= retry_limit:
                 if isinstance(last_error, requests.RequestException) or status in (408, 409, 429) or status >= 500:
@@ -221,9 +230,10 @@ class QwenImageClient:
             if status in ("FAILED", "CANCELED", "UNKNOWN"):
                 code = str(output.get("code", ""))
                 message = str(output.get("message", ""))
+                if self._fatal(0, code, message):
+                    raise FatalImageApiError(f"image task authentication or billing failure: {code}: {message}")
                 if self._moderated(code, message):
-                    raise ImageModerationError(f"image task rejected: {code or status}")
+                    raise ImageModerationError(f"image task rejected: {code or status}: {message}")
                 raise ImageApiError(f"image task ended with {status}: {message[:500]}")
             time.sleep(self.config.poll_interval_sec)
         raise ImageApiError(f"image task polling timed out: {task_id}")
-

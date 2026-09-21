@@ -1,1 +1,1 @@
-"""Self-contained augmentation methods, each with its own configuration and assets."""
+"""Augmentation methods with individual configurations and shared assets."""

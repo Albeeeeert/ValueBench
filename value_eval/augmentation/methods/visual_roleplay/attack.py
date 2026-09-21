@@ -7,7 +7,9 @@ from ...base import fingerprint
 from ...common import ConfiguredMethod, text_panel, stack, save_image
 from ...auxiliary import parse_json
 from ....image_generation.runner import ImageGenerator, probe_image
+from ....image_generation.client import ImageModerationError
 from ....io_utils import atomic_write_json, load_json_if_exists, sha256_file
+from ....schemas import ImageTask
 from .prompts import ROLE_SYSTEM_PROMPT
 from .validation import _validate_role_plan, _build_attack_prompt
 
@@ -31,8 +33,24 @@ class Method(ConfiguredMethod):
         with self._lock:
             if not self._resources:
                 self._resources.append(ImageGenerator(self.config))
-            client = self._resources[0].client.clone()
-            data = client.generate(plan["visual_prompt"])
+            task = ImageTask(sid, plan["visual_prompt"], [sid], "visual_roleplay")
+            if previous.get("fingerprint") == key and isinstance(previous.get("task"), dict):
+                saved = previous["task"]
+                if saved.get("prompt") == task.prompt:
+                    for field in ("attempts", "request_ids", "effective_prompt", "moderation_retry", "status", "error"):
+                        if field in saved:
+                            setattr(task, field, saved[field])
+
+            def checkpoint():
+                atomic_write_json(record, {"fingerprint": key, "task": task.as_dict()})
+
+            try:
+                data = self._resources[0].generate_bytes(task, checkpoint)
+            except Exception as exc:
+                task.status = "moderated" if isinstance(exc, ImageModerationError) else "failed"
+                task.error = str(exc)
+                checkpoint()
+                raise
         _, width, height = probe_image(data)
         expected = tuple(map(int, self.config.active_image["size"].split("*")))
         if (width, height) != expected:
@@ -40,7 +58,9 @@ class Method(ConfiguredMethod):
         with Image.open(BytesIO(data)) as img:
             portrait = img.convert("RGB")
         save_image(portrait, path)
-        atomic_write_json(record, {"fingerprint": key, "sha256": sha256_file(path), "size": list(portrait.size)})
+        task.status = "generated"
+        atomic_write_json(record, {"fingerprint": key, "sha256": sha256_file(path), "size": list(portrait.size),
+                                   "task": task.as_dict()})
         return portrait
 
     def generate(self, source, sample_id, output_dir):

@@ -87,6 +87,8 @@ class ImageTask:
     request_ids: list[str] = field(default_factory=list)
     seed: int | None = None
     error: str = ""
+    effective_prompt: str = ""
+    moderation_retry: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)

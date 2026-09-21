@@ -53,7 +53,8 @@ response:
 | [viscra](../value_eval/augmentation/methods/viscra/config.yaml) | 注意力定位遮挡区，底部添加关键词条，文本使用改写问题 | 是 | 辅助文本 API、本地 Qwen2.5-VL |
 
 统一依赖由 `requirements.txt` 提供，`pyproject.toml` 从该文件生成安装依赖；不再使用
-`augmentation` 或 `local-image` extras。MML_WR 另需 NLTK 数据，CS-DJ 和 VisCRA 的
+`augmentation` 或 `local-image` extras。MML_WR 自动读取项目内
+`value_eval/augmentation/assets/nltk_data/`，CS-DJ 和 VisCRA 的
 模型、图库需提前放到本地。安装与迁移路径见 [部署说明](DEPLOYMENT.md)。
 
 ### 辅助模型

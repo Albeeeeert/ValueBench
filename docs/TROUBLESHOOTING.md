@@ -33,8 +33,16 @@ Excel 模式需要先成功执行 `prepare-scenarios`，或直接使用 `run-all
 
 ## 图片被审核拒绝
 
-图片 manifest 会把任务标记为 `moderated`。这属于单条图片失败，不会伪造占位图片。
-应检查对应 `image_description`，调整生成内容后使用新 `run.id` 重跑。
+API 后端默认尝试一次中性化改写，保留原有画面风格；只有通过独立 anchor 和风格校验的
+候选才提交生图。配置见 [审核拒绝后的提示词重试](CONFIGURATION.md#审核拒绝后的提示词重试)。
+图片 manifest 的 `moderation_retry` 保存原始拒绝、anchors、改写提示词、校验报告和请求 ID；
+`effective_prompt` 是实际提交的描述，原始 `prompt` 和 benchmark 不变。
+
+改写后仍被拒绝、anchor 提取失败或候选不合格时，任务标为 `moderated`，其余图片继续。
+普通重跑不会刷新已耗尽的预算；检查历史后可用 `generate-images --force` 重置所选图片任务，
+或修改生成内容并使用新 `run.id`。`--force` 同时会重新生成所选的成功图片。
+`image.moderation_retry.enabled: false` 可关闭改写，恢复直接记录审核失败的行为。
+明确属于审核拒绝的 HTTP 403 按单条审核失败处理；鉴权、欠费及其他访问拒绝仍为致命错误。
 
 ## 增强方法未启用或方法名错误
 
@@ -74,14 +82,17 @@ CS-DJ 必须返回三条编号子问题；HIMRD 必须能由文本与视觉片�
 
 ## NLTK 词性标注数据缺失
 
-MML_WR 的 `LookupError` 若提及 `averaged_perceptron_tagger_eng`，说明已安装 Python 包
-但缺少词性标注数据。在运行项目的同一环境执行：
+MML_WR 的 `LookupError` 若提及 `averaged_perceptron_tagger_eng`，请检查项目内
+`value_eval/augmentation/assets/nltk_data/taggers/averaged_perceptron_tagger_eng/`
+是否完整。该目录由 MML_WR 自动加载，无需设置 `NLTK_DATA`。缺失时，在联网机器的
+项目根目录、运行项目的同一环境执行：
 
 ```bash
-python -m nltk.downloader averaged_perceptron_tagger_eng
+python -m nltk.downloader -d value_eval/augmentation/assets/nltk_data averaged_perceptron_tagger_eng
 ```
 
-离线服务器提前复制数据并配置 `NLTK_DATA`。预检和增强生成不会自动下载这些资源。
+离线服务器随项目复制该数据目录；自定义存放位置时用 `NLTK_DATA` 指定数据根目录。
+预检和增强生成不会自动下载这些资源。
 
 ## CS-DJ 图库或 CLIP 加载失败
 

@@ -171,6 +171,42 @@ YAML 文件哈希，修改配置后对旧 run 执行 `run-all` 可能触发指�
 manifest 并重新生成。由于图片请求早于最终跨 shard 全局重复检查，后续校验失败时可能已经
 产生无法继续使用的图片 API 费用。
 
+### 审核拒绝后的提示词重试
+
+API 后端默认启用以下配置；本地后端不调用改写或校验模型。模型仅在图片被审核拒绝后调用。
+
+```yaml
+image:
+  moderation_retry:
+    enabled: true
+    model: author
+    validator_model: author
+    max_rewrites: 1
+```
+
+`model` 引用 `models` 的别名，省略时使用 `generation.author_model`；`validator_model`
+省略时使用同一别名，但提取 anchors、改写、校验各自使用独立请求，不复用对话历史。
+`max_rewrites` 固定为 1，只允许一次措辞改写；不提供切换绘制风格的重试。
+
+仅中性化措辞，并允许使用描述同一物体的技术化名称。原有绘制风格必须保留，不能将
+写实场景改成插图、矢量图或影视分镜，也不能额外添加安全培训等框架。
+校验要求人物、物件及形状材质、数量、颜色衣着、动作关系、构图位置、时间和可见文字保持一致。
+anchors 始终来自原始描述；独立模型逐项提供候选文本中的证据，同时检查整个原始场景。
+程序另行检查数字及可见文字。校验失败的候选不提交生图，也会消耗一个改写名额。
+该校验约束的是提示词语义，不能保证生图模型最终准确绘制全部视觉事实。
+
+默认审核恢复路径最多提交原提示词及一个通过校验的候选；网络/限流层仍使用原有
+`max_retries` / `rate_limit_retries`。文本侧最多需要一次 anchor 提取、一次改写和一次校验，
+每次请求的网络重试由相应 `models.*` 配置控制。鉴权、欠费和致命连接错误仍终止图片阶段。
+
+原始 benchmark 和图片任务 `prompt` 保持不变，`effective_prompt` 记录实际提交的描述。
+每次请求前后保存进度，普通重跑继续未完成的重试；耗尽的任务保持 `moderated`，不会重置预算。
+进程中断时已占用但结果未知的改写也计入预算；anchor 提取失败或中断时停止自动恢复。
+旧 manifest 中的插图/分镜候选不会继续提交。
+`--force` 会清除所选图片任务的历史并重新生成（也包括已成功任务）。已有成功图片继续按
+原有图片生成参数和文件哈希复用。VisualRoleplay 的角色图复用相同机制，历史保存在
+对应的 `preparation/*-portrait.json` 中。
+
 ## augmentation
 
 ```yaml
@@ -208,8 +244,8 @@ augmentation:
 | `si` | QR 同类文字条参数，另有 `blocks_per_side: 2`、`shuffle_prompt: true`、`seed: 42` |
 | `viscra` | `attention_model_path`、`device: cuda`、`attention_layer: 18`、`attention_stride: 1`、`mask_color: green` |
 
-`font_path` 相对方法配置目录：FigStep 使用自身 `assets/fonts/ARIAL.TTF`，其他方法
-使用共享 `../../assets/fonts/ARIAL.TTF`。面板类方法的字号、留白和间距随实际图宽相对
+`font_path` 相对方法配置目录：所有方法使用共享 `../../assets/fonts/ARIAL.TTF`。
+面板类方法的字号、留白和间距随实际图宽相对
 `reference_width` 缩放；FigStep 和 MML 的固定文字画布不随原图变化。
 
 CS-DJ 固定需要 9 张干扰图和 3 个子问题，`max_pairs_per_question` 必须为 9。

@@ -116,7 +116,7 @@ class MigrationTest(unittest.TestCase):
         stack.enter_context(patch("value_eval.augmentation.methods.viscra.attention.AttentionModel.close"))
         buffer = BytesIO()
         self.scene.save(buffer, format="PNG")
-        fake = SimpleNamespace(client=SimpleNamespace(clone=lambda:SimpleNamespace(generate=lambda prompt:buffer.getvalue())),close=lambda:None)
+        fake = SimpleNamespace(generate_bytes=lambda task,checkpoint:buffer.getvalue(),close=lambda:None)
         stack.enter_context(patch("value_eval.augmentation.methods.visual_roleplay.attack.ImageGenerator", return_value=fake))
         self.config = replace(self.config, image={**self.config.image, "size":"512*512"}, image_backend="api")
         return stack
@@ -442,7 +442,7 @@ class MigrationTest(unittest.TestCase):
                 def generate(prompt):
                     calls.append(prompt)
                     return buffer.getvalue()
-                backend = SimpleNamespace(client=SimpleNamespace(clone=lambda:SimpleNamespace(generate=generate)),close=lambda:None)
+                backend = SimpleNamespace(generate_bytes=lambda task,checkpoint:generate(task.prompt),close=lambda:None)
                 with patch("value_eval.augmentation.methods.visual_roleplay.attack.ImageGenerator", return_value=backend):
                     output = self.root / f"vr-{width}"
                     row = method.generate(self.source, "role", output)[0]
